@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "capsuleId": "cap_01JQ8XZ4M7N2P5R8T0V3W6Y9AB",
+  "kind": "accepted",
+  "records": [
+    {
+      "evidenceId": "ev_0001",
+      "transcriptId": "tr_family",
+      "segmentId": "seg_0001",
+      "charStart": 26,
+      "charEnd": 48,
+      "timeStart": 0,
+      "timeEnd": 11.2,
+      "quote": "a splash of buttermilk",
+      "language": "en-GB",
+      "recordingId": "rec_kitchen_call"
+    },
+    {
+      "evidenceId": "ev_0002",
+      "transcriptId": "tr_family",
+      "segmentId": "seg_0002",
+      "charStart": 0,
+      "charEnd": 38,
+      "timeStart": 11.2,
+      "timeEnd": 24.8,
+      "quote": "Rest the batter while the pan comes up",
+      "language": "en-GB",
+      "recordingId": "rec_kitchen_call"
+    }
+  ]
+}

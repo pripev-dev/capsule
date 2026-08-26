@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.pripev.com/v0/visual-fragment-manifest.schema.json",
+  "title": "Visual fragment manifest",
+  "description": "One manifest, two disjoint document types selected by `assetType`. A direct cutout is pixels derived from a family original; a generated sticker is an AI interpretation influenced by one. They never share a type, a manifest or a directory, and a generated interpretation is never described as a piece of the original.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "assetType", "status", "items"],
+
+  "properties": {
+    "$comment": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "assetType": { "enum": ["direct-pixel-cutout", "generated-source-derived-sticker"] },
+    "status": { "enum": ["pending-extraction-and-review", "in-review", "approved", "not-used"] },
+    "capsuleId": { "$ref": "common.schema.json#/$defs/capsuleId" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "items": { "type": "array" }
+  },
+
+  "allOf": [
+    {
+      "if": { "properties": { "assetType": { "const": "direct-pixel-cutout" } }, "required": ["assetType"] },
+      "then": { "properties": { "items": { "items": { "$ref": "#/$defs/directCutout" } } } }
+    },
+    {
+      "if": { "properties": { "assetType": { "const": "generated-source-derived-sticker" } }, "required": ["assetType"] },
+      "then": { "properties": { "items": { "items": { "$ref": "#/$defs/generatedSticker" } } } }
+    },
+    {
+      "$comment": "A manifest may only be approved once every item has a decision. A gate that can pass with nothing reviewed would assert a human reviewed something they did not.",
+      "if": { "properties": { "status": { "const": "approved" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "items": { "items": { "properties": { "reviewDecision": { "enum": ["approved", "rejected"] } } } }
+        }
+      }
+    }
+  ],
+
+  "$defs": {
+    "directCutout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "assetType", "sourceImageId", "sourceImageSha256", "label",
+        "extractionClass", "outputMode", "extractionMethod", "maskSemantics",
+        "maskPath", "maskSha256", "alphaPngPath", "alphaPngSha256",
+        "contourPath", "contourSha256", "sourceTransform", "reviewDecision"
+      ],
+      "properties": {
+        "id":        { "type": "string", "pattern": "^frg_[0-9A-Za-z_-]{1,40}$" },
+        "assetType": { "const": "direct-pixel-cutout" },
+
+        "sourceImageId":     { "type": "string", "minLength": 1 },
+        "sourceImageSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+
+        "extractionClass": {
+          "enum": ["object-on-ground", "graphic-on-flat-field", "all-over-pattern"],
+          "description": "What separates figure from ground in the source image. Choosing this first is what stops a tray of cookies becoming twenty cookies."
+        },
+        "outputMode": {
+          "enum": ["sticker", "motif", "editorial-cutout"],
+          "description": "editorial-cutout is a deliberately irregular torn-paper crop. It is the intended look, not a fallback for a failed matte."
+        },
+        "extractionMethod": {
+          "enum": ["birefnet-matte", "flat-field-key", "line-trace", "torn-crop", "manual-circle"],
+          "description": "FastSAM automatic masking is deliberately absent. It answered the wrong question."
+        },
+        "maskSemantics": {
+          "enum": ["figure-ground", "keyed-field", "torn-crop"],
+          "description": "What the mask means, so that a required maskPath does not imply a figure exists where there is none."
+        },
+
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["display", "object", "material", "visualWeight", "eligibleRoles", "provenance"],
+          "description": "A fragment is never an anonymous file. Both the composition agent and the person reviewing need to know what it is.",
+          "properties": {
+            "display": {
+              "type": "string",
+              "minLength": 12,
+              "not": { "pattern": "^(Detected visual detail|Candidate|Region|Mask|Cutout)\\s*\\d+$" },
+              "description": "A human-readable name. Placeholder strings of the form 'Detected visual detail 1' are rejected by construction."
+            },
+            "object":         { "type": "string", "minLength": 1 },
+            "material":       { "type": "string", "minLength": 1 },
+            "dominantColors": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/hexColor" } },
+            "orientation":    { "enum": ["upright", "rotated", "flat", "unknown"] },
+            "visualWeight":   { "enum": ["light", "medium", "heavy"] },
+            "eligibleRoles":  { "type": "array", "minItems": 1,
+                                "items": { "enum": ["opening-banner", "vertical-rail", "horizontal-divider", "side-spacer", "free"] } },
+            "provenance":     { "enum": ["vision-proposed", "family-confirmed"] }
+          }
+        },
+
+        "maskPath":     { "type": "string", "pattern": "^visuals/approved-cutouts/" },
+        "maskSha256":   { "$ref": "common.schema.json#/$defs/sha256" },
+        "alphaPngPath": { "type": "string", "pattern": "^visuals/approved-cutouts/" },
+        "alphaPngSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "contourPath":  { "type": "string", "pattern": "^visuals/approved-cutouts/" },
+        "contourSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "vectorPath":   { "type": ["string", "null"],
+                          "description": "Optional. Vector tracing distorts handwriting and line art, so it is never the default." },
+
+        "sourceTransform": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["normalizedBox", "sourceWidth", "sourceHeight"],
+          "properties": {
+            "normalizedBox": { "type": "array", "minItems": 4, "maxItems": 4,
+                               "items": { "$ref": "common.schema.json#/$defs/normalizedUnit" } },
+            "cropPixels":    { "type": "array", "minItems": 4, "maxItems": 4,
+                               "items": { "type": "integer", "minimum": 0 } },
+            "sourceWidth":   { "type": "integer", "minimum": 1 },
+            "sourceHeight":  { "type": "integer", "minimum": 1 },
+            "areaRatio":     { "$ref": "common.schema.json#/$defs/normalizedUnit" },
+            "contourPointCount": { "type": "integer", "minimum": 3 }
+          }
+        },
+
+        "palette":      { "type": "array", "minItems": 3,
+                          "items": { "$ref": "common.schema.json#/$defs/hexColor" } },
+        "swatchScales": { "type": "array", "minItems": 1, "items": { "type": "number", "exclusiveMinimum": 0 } },
+
+        "reviewDecision":    { "enum": ["approved", "rejected", "pending"] },
+        "reviewOrigin":      { "enum": ["auto-proposed", "user-clicked", "user-circled"] },
+        "reviewedByPersonId": { "$ref": "common.schema.json#/$defs/personId" },
+        "reviewedAt":        { "type": "string", "format": "date-time" },
+        "privacyState":      { "enum": ["private", "public-approved"] }
+      },
+
+      "allOf": [
+        {
+          "$comment": "An all-over pattern has no figure. It is not segmented; it yields torn swatches and a palette, which is where the page's colour comes from.",
+          "if": { "properties": { "extractionClass": { "const": "all-over-pattern" } }, "required": ["extractionClass"] },
+          "then": {
+            "properties": {
+              "outputMode":    { "const": "editorial-cutout" },
+              "maskSemantics": { "const": "torn-crop" },
+              "extractionMethod": { "const": "torn-crop" }
+            },
+            "required": ["palette", "swatchScales"]
+          }
+        },
+        {
+          "$comment": "A drawing on a flat field carries its own outline, which beats any neural matte.",
+          "if": { "properties": { "extractionClass": { "const": "graphic-on-flat-field" } }, "required": ["extractionClass"] },
+          "then": {
+            "properties": {
+              "extractionMethod": { "enum": ["flat-field-key", "line-trace"] },
+              "maskSemantics":    { "const": "keyed-field" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "extractionClass": { "const": "object-on-ground" } }, "required": ["extractionClass"] },
+          "then": {
+            "properties": {
+              "extractionMethod": { "enum": ["birefnet-matte", "manual-circle"] },
+              "maskSemantics":    { "const": "figure-ground" }
+            }
+          }
+        }
+      ]
+    },
+
+    "generatedSticker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "assetType", "sourceImageIds", "prompt", "model",
+        "modelSnapshotWhenAvailable", "generatedAt", "outputPath",
+        "outputSha256", "usageReceipt", "derivationLabel",
+        "reviewDecision", "publicUseApproved"
+      ],
+      "properties": {
+        "id":        { "type": "string", "pattern": "^gen_[0-9A-Za-z_-]{1,40}$" },
+        "assetType": { "const": "generated-source-derived-sticker" },
+        "sourceImageIds": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "prompt":        { "type": "string", "minLength": 1 },
+        "promptVersion": { "type": "string" },
+        "model":         { "type": "string", "minLength": 1 },
+        "modelSnapshotWhenAvailable": { "type": ["string", "null"] },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "outputPath":  { "type": "string", "pattern": "^visuals/generated-derivatives/" },
+        "outputSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "usageReceipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["units", "inputUnits", "outputUnits", "currency", "amount"],
+          "description": "Five normalized keys, closed. The obvious implementation of a usage receipt is to paste the provider's response envelope; that is forbidden, so it is not representable.",
+          "properties": {
+            "units":       { "enum": ["images", "tokens"] },
+            "inputUnits":  { "type": "number", "minimum": 0 },
+            "outputUnits": { "type": "number", "minimum": 0 },
+            "currency":    { "type": "string", "pattern": "^[A-Z]{3}$" },
+            "amount":      { "type": "number", "minimum": 0 }
+          }
+        },
+        "derivationLabel": {
+          "const": "generated-source-derived — not a piece of the original",
+          "description": "Pinned so a generated interpretation can never be relabelled as an extracted fragment."
+        },
+        "reviewDecision":    { "enum": ["approved", "rejected", "pending"] },
+        "reviewedByPersonId": { "$ref": "common.schema.json#/$defs/personId" },
+        "publicUseApproved": { "type": "boolean" }
+      }
+    }
+  }
+}

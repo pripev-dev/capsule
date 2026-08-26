@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  repository-baseline:
+    name: repository-baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify specification baseline
+        shell: bash
+        run: |
+          test -f AGENTS.md
+          test -f README.md
+          test -f schemas/capsule.schema.json
+          test -f schemas/preservation-manifest.schema.json
+          test -f schemas/visual-fragment-manifest.schema.json
+          test -f schemas/evidence-map.schema.json
+          git diff --check "origin/${GITHUB_BASE_REF:-main}...HEAD"
+
+      # The negative fixtures are the point. A rule nobody can break is not a
+      # rule, so the suite asserts that each promised prohibition actually
+      # rejects the document that breaks it.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Validate schemas and fixtures
+        run: npm test
+
+      # This repository goes public. The layered-cake family recording, its
+      # transcript and its images must never reach it, so the check is
+      # mechanical rather than a matter of remembering.
+      - name: Refuse family material
+        shell: bash
+        run: |
+          if git ls-files | grep -Ei '\.(ogg|opus|mp3|m4a|wav)$'; then
+            echo "::error::An audio file is tracked in a repository that goes public."
+            exit 1
+          fi
+          if git grep -lI --cached -E '[а-яА-ЯёЁ]{6,}' -- . ':!*.md' > /dev/null 2>&1; then
+            echo "::error::Cyrillic source material found outside documentation."
+            exit 1
+          fi

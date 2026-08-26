@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.pripev.com/v0/common.schema.json",
+  "title": "Shared Pripev definitions",
+  "description": "Identifier patterns, content-addressed references, and the normalized-geometry primitives. Every identifier carries a type prefix so that a closure check can resolve any reference in a document without a hand-written table.",
+
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Lowercase hex. Bare digest, never prefixed with 'sha256:'."
+    },
+
+    "ulid": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+
+    "capsuleId":     { "type": "string", "pattern": "^cap_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "familySpaceId": { "type": "string", "pattern": "^fam_[0-9A-HJKMNP-TV-Z]{26}$" },
+    "personId":      { "type": "string", "pattern": "^per_[0-9A-Za-z_-]{1,40}$" },
+    "recordingId":   { "type": "string", "pattern": "^rec_[0-9A-Za-z_-]{1,40}$" },
+    "artifactId":    { "type": "string", "pattern": "^art_[0-9A-Za-z_-]{1,40}$" },
+    "transcriptId":  { "type": "string", "pattern": "^tr_[0-9A-Za-z_-]{1,40}$" },
+    "segmentId":     { "type": "string", "pattern": "^seg_[0-9A-Za-z_-]{1,40}$" },
+    "evidenceId":    { "type": "string", "pattern": "^ev_[0-9A-Za-z_-]{1,40}$" },
+    "claimId":       { "type": "string", "pattern": "^clm_[0-9A-Za-z_-]{1,40}$" },
+    "blockId":       { "type": "string", "pattern": "^blk_[0-9A-Za-z_-]{1,40}$" },
+    "fragmentId":    { "type": "string", "pattern": "^(frg|gen)_[0-9A-Za-z_-]{1,40}$" },
+    "clusterId":     { "type": "string", "pattern": "^clu_[0-9A-Za-z_-]{1,40}$" },
+    "placementId":   { "type": "string", "pattern": "^plc_[0-9A-Za-z_-]{1,40}$" },
+    "editionId":     { "type": "string", "pattern": "^ed_[0-9A-Za-z_-]{1,40}$" },
+    "compositionId": { "type": "string", "pattern": "^cmp_[0-9A-Za-z_-]{1,40}$" },
+    "versionId":     { "type": "string", "pattern": "^ver_[0-9A-Za-z_-]{1,40}$" },
+    "fontId":        { "type": "string", "pattern": "^fnt_[0-9A-Za-z_-]{1,40}$" },
+    "clarificationId": { "type": "string", "pattern": "^clr_[0-9A-Za-z_-]{1,40}$" },
+
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+      "description": "BCP-47. A recording's primary locale, never authoritative over per-segment language."
+    },
+
+    "hashRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["archivePath", "sha256"],
+      "description": "A file inside the portable archive, addressed by content. workspacePath records where the kitchen kept it, so neither vocabulary is lost.",
+      "properties": {
+        "archivePath":   { "type": "string", "pattern": "^[A-Za-z0-9._\\-/]+$" },
+        "workspacePath": { "type": "string" },
+        "sha256":        { "$ref": "#/$defs/sha256" },
+        "bytes":         { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "normalizedUnit": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "A fraction of the composed surface. Pixels are not representable anywhere in this schema."
+    },
+
+    "normalizedPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "$ref": "#/$defs/normalizedUnit" },
+        "y": { "$ref": "#/$defs/normalizedUnit" }
+      }
+    },
+
+    "normalizedRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "$ref": "#/$defs/normalizedUnit" },
+        "max": { "$ref": "#/$defs/normalizedUnit" }
+      }
+    },
+
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#[0-9a-f]{6}$",
+      "description": "Permitted only inside palette tokens, where colour is sampled data rather than styling."
+    },
+
+    "pipelineRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name":    { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "retentionClass": {
+      "enum": [
+        "irreplaceable-source",
+        "accepted-authored-state",
+        "durable-fallback"
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.pripev.com/v0/evidence-map.schema.json",
+  "title": "Evidence map",
+  "description": "Every factual statement in a capsule points at a span of what was actually said. Evidence lives here rather than inside blocks so that re-aligning or re-segmenting a transcript remaps records without touching a single block. Only the accepted map is preserved; the agent's working map, with its rejected hypotheses, is scratch.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "capsuleId", "kind", "records"],
+
+  "properties": {
+    "$comment": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "capsuleId": { "$ref": "common.schema.json#/$defs/capsuleId" },
+    "kind": {
+      "enum": ["accepted", "working"],
+      "description": "Only `accepted` is capsule truth. A `working` map must never be preserved."
+    },
+
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidenceId", "transcriptId", "segmentId", "charStart", "charEnd", "quote", "language"],
+        "properties": {
+          "evidenceId":   { "$ref": "common.schema.json#/$defs/evidenceId" },
+          "transcriptId": { "$ref": "common.schema.json#/$defs/transcriptId" },
+          "segmentId":    { "$ref": "common.schema.json#/$defs/segmentId" },
+          "charStart":    { "type": "integer", "minimum": 0 },
+          "charEnd":      { "type": "integer", "minimum": 0 },
+          "timeStart":    { "type": "number", "minimum": 0 },
+          "timeEnd":      { "type": "number", "minimum": 0 },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The exact substring. It costs bytes and buys the offline promise: a viewer with no database can verify that a citation still matches its transcript, so an evidence link that drifted becomes a hard error rather than a plausible-looking sentence."
+          },
+          "language":    { "$ref": "common.schema.json#/$defs/locale" },
+          "recordingId": { "$ref": "common.schema.json#/$defs/recordingId" },
+          "remappedFrom": {
+            "type": "array",
+            "items": { "$ref": "common.schema.json#/$defs/evidenceId" },
+            "description": "Survives re-alignment. A record's identity outlives the segmentation it was first written against."
+          }
+        }
+      }
+    },
+
+    "citedBy": {
+      "type": "object",
+      "description": "A derived index, keyed by evidenceId. Convenience only; regenerable from the capsule document.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "blockIds": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/blockId" } },
+          "claimIds": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/claimId" } }
+        }
+      }
+    }
+  },
+
+  "if": { "properties": { "kind": { "const": "working" } }, "required": ["kind"] },
+  "then": {
+    "properties": {
+      "preservable": {
+        "const": false,
+        "description": "Set explicitly on a working map so it cannot be mistaken for authored state."
+      }
+    },
+    "required": ["schemaVersion", "capsuleId", "kind", "records", "preservable"]
+  }
+}

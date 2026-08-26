@@ -1,0 +1,18 @@
+{
+  "name": "@pripev/capsule",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The durable capsule contract: schemas, validators and the offline viewer.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.mjs\""
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}

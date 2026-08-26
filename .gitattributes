@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------
+# Capsule - line ending policy
+#
+# The development machine is Windows and CI is ubuntu-latest. Pinning the
+# policy in the repository means a checkout does not depend on each clone's
+# local core.autocrlf setting, which is how a byte-exact fixture gets
+# silently corrupted.
+# ---------------------------------------------------------------------------
+
+* text=auto eol=lf
+
+# Executable scripts - LF, always, regardless of platform or local config
+*.sh            text eol=lf
+
+# Windows-only scripts - CRLF, for the same reason in the other direction
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+
+# Content-addressed fixtures are compared by hash and must never be rewritten
+# by a checkout filter.
+*.sha256        -text
+fixtures/**/*.json  -text
+*.png           binary

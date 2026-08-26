@@ -1,0 +1,39 @@
+# --- Secrets and local configuration ---------------------------------------
+# There are no secrets in this repository and there never will be (AGENTS.md).
+# These rules exist so that a local development key cannot become a committed
+# one by accident, not because one is expected.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# --- Node -------------------------------------------------------------------
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.vercel/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- IDEs and editors -------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- Operating system -------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# --- Scratch ----------------------------------------------------------------
+scratch/
+.scratch/
+tmp/

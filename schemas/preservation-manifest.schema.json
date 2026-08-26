@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.pripev.com/v0/preservation-manifest.schema.json",
+  "title": "Capsule preservation manifest",
+  "description": "The deliberate preservation set, in three retention classes. A time capsule is not every file produced during processing. `excluded` is required, because the absence of an object must be declared: otherwise 'we deleted the rejected cutouts' and 'we lost them' look identical in an archive.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "capsuleId", "generatedAt", "policy", "objects", "excluded"],
+
+  "properties": {
+    "$comment": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "capsuleId":   { "$ref": "common.schema.json#/$defs/capsuleId" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initialPreservationYears", "minimumIndependentCopies", "verificationIntervalDays"],
+      "properties": {
+        "initialPreservationYears": { "type": "integer", "minimum": 1 },
+        "minimumIndependentCopies": {
+          "type": "integer", "minimum": 1,
+          "description": "At least one copy outside the primary serving path, and preferably outside the same failure domain."
+        },
+        "verificationIntervalDays": { "type": "integer", "minimum": 1 },
+        "foreverClaimed": {
+          "const": false,
+          "description": "No 'forever' language unless a funded legal and operational mechanism supports it. Pinned false so marketing cannot acquire it by accident."
+        }
+      }
+    },
+
+    "objects": { "type": "array", "items": { "$ref": "#/$defs/object" } },
+
+    "excluded": {
+      "type": "array",
+      "description": "What was deliberately not retained, and why. Required, may be empty.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "reason"],
+        "properties": {
+          "kind": {
+            "enum": ["agent-scratch", "provider-envelope", "rejected-fragment",
+                     "render-cache", "embedding", "transient-log",
+                     "abandoned-intake", "failed-candidate"]
+          },
+          "reason":       { "type": "string", "minLength": 1 },
+          "retainedUntil": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    },
+
+    "verificationHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "objectsChecked", "mismatches"],
+        "properties": {
+          "at":             { "type": "string", "format": "date-time" },
+          "objectsChecked": { "type": "integer", "minimum": 0 },
+          "mismatches":     { "type": "integer", "minimum": 0 },
+          "detail":         { "type": "string" }
+        }
+      }
+    },
+
+    "restoreDrills": {
+      "type": "array",
+      "description": "Restore exercises run on representative capsules, not only on empty infrastructure.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "scope", "outcome"],
+        "properties": {
+          "at":      { "type": "string", "format": "date-time" },
+          "scope":   { "type": "string" },
+          "outcome": { "enum": ["restored", "partial", "failed"] },
+          "detail":  { "type": "string" }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectId", "retentionClass", "kind", "ref", "origin",
+                   "encryptionState", "accessState", "copyCount", "deletionEligibility"],
+      "properties": {
+        "objectId":       { "type": "string", "minLength": 1 },
+        "retentionClass": { "$ref": "common.schema.json#/$defs/retentionClass" },
+        "kind": {
+          "enum": ["source-audio", "source-image", "consent-record", "family-fact",
+                   "transcript-version", "capsule-document", "evidence-map",
+                   "fragment-manifest", "direct-cutout", "generated-derivative",
+                   "font-subset",
+                   "rendered-html", "rendered-pdf", "checksums", "viewer",
+                   "creation-receipt"]
+        },
+        "ref":    { "$ref": "common.schema.json#/$defs/hashRef" },
+        "format": { "type": "string" },
+        "origin": { "enum": ["family-upload", "pipeline", "agent", "family-edit"] },
+        "creationPipeline": { "$ref": "common.schema.json#/$defs/pipelineRef" },
+        "encryptionState": {
+          "enum": ["at-rest-encrypted", "plaintext-archive"],
+          "description": "An enum and nothing more. Key material is never schema-representable."
+        },
+        "accessState": { "enum": ["private", "public-approved", "publication-not-authorized"] },
+        "copyCount":   { "type": "integer", "minimum": 1 },
+        "copies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tier", "locationClass"],
+            "properties": {
+              "tier":          { "enum": ["primary", "independent"] },
+              "locationClass": { "type": "string", "minLength": 1 },
+              "lastVerifiedAt": { "type": ["string", "null"], "format": "date-time" }
+            }
+          }
+        },
+        "lastVerification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["at", "method", "result"],
+          "properties": {
+            "at":     { "type": "string", "format": "date-time" },
+            "method": { "const": "sha256" },
+            "result": { "enum": ["match", "mismatch"] }
+          }
+        },
+        "deletionEligibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["eligible"],
+          "properties": {
+            "eligible":  { "type": "boolean" },
+            "notBefore": { "type": ["string", "null"] },
+            "reason":    { "type": "string" }
+          }
+        }
+      },
+
+      "allOf": [
+        {
+          "$comment": "The retention table from the proposal, as a constraint rather than as prose. These cannot be reconstructed honestly after loss.",
+          "if": {
+            "properties": { "kind": { "enum": ["source-audio", "source-image", "consent-record", "family-fact"] } },
+            "required": ["kind"]
+          },
+          "then": { "properties": { "retentionClass": { "const": "irreplaceable-source" } } }
+        },
+        {
+          "$comment": "Rebuildable in principle, but these are what the family reviewed and approved.",
+          "if": {
+            "properties": { "kind": { "enum": ["transcript-version", "capsule-document", "evidence-map",
+                                                "fragment-manifest", "direct-cutout",
+                                                "generated-derivative", "font-subset"] } },
+            "required": ["kind"]
+          },
+          "then": { "properties": { "retentionClass": { "const": "accepted-authored-state" } } }
+        },
+        {
+          "$comment": "These keep the capsule inspectable if the application or the current renderer disappears.",
+          "if": {
+            "properties": { "kind": { "enum": ["rendered-html", "rendered-pdf", "checksums", "viewer", "creation-receipt"] } },
+            "required": ["kind"]
+          },
+          "then": { "properties": { "retentionClass": { "const": "durable-fallback" } } }
+        },
+        {
+          "$comment": "Anything not uploaded by the family was produced by something, and that something is recorded.",
+          "if": {
+            "properties": { "origin": { "enum": ["pipeline", "agent"] } },
+            "required": ["origin"]
+          },
+          "then": { "required": ["objectId", "retentionClass", "kind", "ref", "origin",
+                                 "encryptionState", "accessState", "copyCount",
+                                 "deletionEligibility", "creationPipeline"] }
+        },
+        {
+          "$comment": "An irreplaceable object is never deletable on a schedule.",
+          "if": {
+            "properties": { "retentionClass": { "const": "irreplaceable-source" } },
+            "required": ["retentionClass"]
+          },
+          "then": { "properties": { "deletionEligibility": { "properties": { "eligible": { "const": false } } } } }
+        }
+      ]
+    }
+  }
+}

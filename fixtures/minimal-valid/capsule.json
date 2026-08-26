@@ -1,0 +1,403 @@
+{
+  "$comment": "Synthetic fixture. No family material appears in this repository. The recipe, the people and the hashes are invented, and the recording it describes does not exist.",
+
+  "schemaVersion": 0,
+  "schemaRevision": 1,
+  "migration": {
+    "schemaSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "history": []
+  },
+
+  "capsuleId": "cap_01JQ8XZ4M7N2P5R8T0V3W6Y9AB",
+  "familySpaceId": "fam_01JQ8XZ4M7N2P5R8T0V3W6Y9AC",
+  "stage": "composed",
+  "createdAt": "2026-08-26T09:00:00Z",
+  "updatedAt": "2026-08-26T11:30:00Z",
+  "sourceLocale": "en-GB",
+
+  "people": [
+    { "personId": "per_storyteller", "displayName": "Nan", "relationship": "grandmother", "role": "storyteller" },
+    { "personId": "per_creator", "displayName": "Sam", "relationship": "grandchild", "role": "creator" }
+  ],
+
+  "consent": {
+    "uploaderAttestation": {
+      "attestedByPersonId": "per_creator",
+      "at": "2026-08-26T09:00:00Z",
+      "statement": "I recorded this conversation with her knowledge and I have the right to upload it.",
+      "basis": "recorded-with-knowledge"
+    },
+    "storytellerAware": true
+  },
+
+  "recordings": [
+    {
+      "recordingId": "rec_kitchen_call",
+      "role": "source",
+      "contributorPersonId": "per_storyteller",
+      "capturedAt": "2026-08-20",
+      "capturedAtPrecision": "day",
+      "original": {
+        "ref": {
+          "archivePath": "media/originals/rec_kitchen_call.ogg",
+          "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "bytes": 512000
+        },
+        "originalFilename": "voice note 20 Aug.ogg",
+        "container": "ogg",
+        "codec": "opus",
+        "sampleRateHz": 48000,
+        "channels": 1,
+        "durationSeconds": 184.5
+      },
+      "playback": [
+        {
+          "ref": {
+            "archivePath": "media/playback/rec_kitchen_call.mp3",
+            "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "mimeType": "audio/mpeg",
+          "regenerable": true,
+          "pipeline": { "name": "playback-transcode", "version": "0.1.0" }
+        }
+      ],
+      "retentionClass": "irreplaceable-source"
+    }
+  ],
+
+  "artifacts": [
+    {
+      "artifactId": "art_tea_towel",
+      "ref": {
+        "archivePath": "media/originals/art_tea_towel.jpg",
+        "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "mimeType": "image/jpeg",
+      "width": 2048,
+      "height": 1536,
+      "workingDescription": "A printed tea towel with a repeating cornflower border.",
+      "descriptionProvenance": "family-confirmed",
+      "familyConfirmed": true,
+      "publicUseApproved": false,
+      "retentionClass": "irreplaceable-source"
+    }
+  ],
+
+  "transcripts": [
+    {
+      "transcriptId": "tr_machine",
+      "recordingId": "rec_kitchen_call",
+      "kind": "machine",
+      "ordinal": 0,
+      "producedBy": { "engineFamily": "asr", "engineRef": "example-asr", "engineVersionPin": null, "at": "2026-08-26" },
+      "timeAligned": true,
+      "alignmentMethod": "asr-segment",
+      "segments": [
+        {
+          "segmentId": "seg_0001",
+          "start": 0,
+          "end": 11.2,
+          "text": "Sunday pancakes. You want a splash of buttermilk, not a measure of it.",
+          "language": "en-GB",
+          "languageSource": "detected"
+        },
+        {
+          "segmentId": "seg_0002",
+          "start": 11.2,
+          "end": 24.8,
+          "text": "Rest the batter while the pan comes up, and mind the first one always goes wrong.",
+          "language": "en-GB",
+          "languageSource": "detected"
+        }
+      ],
+      "retentionClass": "accepted-authored-state"
+    },
+    {
+      "transcriptId": "tr_family",
+      "recordingId": "rec_kitchen_call",
+      "kind": "family-corrected",
+      "ordinal": 1,
+      "parentTranscriptId": "tr_machine",
+      "timeAligned": true,
+      "alignmentMethod": "asr-segment",
+      "segments": [
+        {
+          "segmentId": "seg_0001",
+          "start": 0,
+          "end": 11.2,
+          "text": "Sunday pancakes. You want a splash of buttermilk, not a measure of it.",
+          "language": "en-GB",
+          "languageSource": "family-confirmed"
+        },
+        {
+          "segmentId": "seg_0002",
+          "start": 11.2,
+          "end": 24.8,
+          "text": "Rest the batter while the pan comes up, and mind the first one always goes wrong.",
+          "language": "en-GB",
+          "languageSource": "family-confirmed"
+        }
+      ],
+      "corrections": [
+        {
+          "correctionId": "corr_0001",
+          "targetSegmentId": "seg_0002",
+          "previousText": "Rest the batter while the pan comes up, and mind the first one always goes round.",
+          "correctedText": "Rest the batter while the pan comes up, and mind the first one always goes wrong.",
+          "reason": "Listened again; she said wrong, not round.",
+          "authorPersonId": "per_creator",
+          "at": "2026-08-26T10:15:00Z"
+        }
+      ],
+      "retentionClass": "accepted-authored-state"
+    }
+  ],
+
+  "claims": [
+    {
+      "claimId": "clm_buttermilk",
+      "kind": "quantity",
+      "truth": "captured",
+      "text": "a splash of buttermilk",
+      "evidence": ["ev_0001"]
+    },
+    {
+      "claimId": "clm_pan_temp",
+      "kind": "temperature",
+      "truth": "unresolved",
+      "evidence": ["ev_0002"]
+    }
+  ],
+
+  "clarifications": [
+    {
+      "clarificationId": "clr_pan_heat",
+      "question": "How hot should the pan be before the first pancake goes in?",
+      "aboutEvidence": ["ev_0002"],
+      "status": "open",
+      "visibleOnPublishedPage": false
+    }
+  ],
+
+  "blocks": [
+    { "blockId": "blk_title", "type": "title", "text": "Sunday pancakes", "evidence": ["ev_0001"], "authoredBy": { "kind": "agent" } },
+    { "blockId": "blk_banner", "type": "collage-anchor" },
+    {
+      "blockId": "blk_chapter",
+      "type": "voice-chapter",
+      "text": "The batter",
+      "recordingRange": { "recordingId": "rec_kitchen_call", "start": 0, "end": 24.8 },
+      "evidence": ["ev_0001"]
+    },
+    {
+      "blockId": "blk_ingredients",
+      "type": "ingredient-group",
+      "children": [
+        {
+          "blockId": "blk_buttermilk",
+          "type": "ingredient-line",
+          "text": "a splash of buttermilk",
+          "evidence": ["ev_0001"],
+          "claimRefs": ["clm_buttermilk"],
+          "marks": [{ "type": "circle", "start": 2, "end": 8 }]
+        }
+      ]
+    },
+    {
+      "blockId": "blk_rest",
+      "type": "instruction-line",
+      "text": "Rest the batter while the pan comes up.",
+      "evidence": ["ev_0002"]
+    },
+    { "blockId": "blk_missing_heat", "type": "unresolved-note", "claimRefs": ["clm_pan_temp"] }
+  ],
+
+  "audioAnchor": { "recordingId": "rec_kitchen_call", "anchorBlockId": "blk_title", "autoplay": false },
+
+  "editions": [
+    { "editionId": "ed_source", "locale": "en-GB", "kind": "source" }
+  ],
+
+  "compositions": [
+    {
+      "compositionId": "cmp_source",
+      "editionId": "ed_source",
+      "intent": {
+        "designSeed": null,
+        "scatterSeed": "0x7f3a91c2",
+        "tokens": {
+          "typeStack": [
+            { "role": "display", "fontId": "fnt_display" },
+            { "role": "text", "fontId": "fnt_text" }
+          ],
+          "palette": {
+            "paperTint": "#f4efe6",
+            "ink": "#241f1c",
+            "accents": ["#4a6d8c"],
+            "sampledFromFragmentIds": ["frg_towel_swatch"]
+          },
+          "rhythm": { "measureRange": [58, 72], "leadingScale": 1.45, "sectionSpacing": "generous" }
+        },
+        "clusters": [
+          {
+            "clusterId": "clu_banner",
+            "role": "opening-banner",
+            "anchor": { "blockId": "blk_banner", "relation": "after" },
+            "memberFragmentIds": ["frg_cornflower", "frg_towel_swatch"],
+            "densityRange": { "min": 0.55, "max": 0.85 },
+            "density": 0.72,
+            "overlapRange": { "min": 0.15, "max": 0.45 },
+            "clusterScatterSeed": "0x2a10",
+            "wrapPriority": 1,
+            "surfaces": { "phone": "simplify", "print": "keep" }
+          }
+        ],
+        "freeFragments": [
+          {
+            "placementId": "plc_margin_flower",
+            "fragmentId": "frg_cornflower",
+            "anchor": { "blockId": "blk_rest", "side": "right" },
+            "eligibleZones": ["margin-outer"],
+            "wrapPriority": 3,
+            "layerHint": "above-paper",
+            "scaleRange": { "min": 0.6, "max": 1 },
+            "rotationRangeDegrees": { "min": -6, "max": 6 }
+          }
+        ],
+        "userAdjustments": [
+          {
+            "targetId": "clu_banner",
+            "kind": "density",
+            "value": 0.66,
+            "surface": null,
+            "authorPersonId": "per_creator",
+            "at": "2026-08-26T11:00:00Z"
+          }
+        ]
+      },
+      "realized": {
+        "rulesetVersion": "composition-rules@0.1.0",
+        "generatedAt": "2026-08-26T11:05:00Z",
+        "regenerable": true,
+        "placements": [
+          {
+            "placementId": "plc_margin_flower",
+            "normalizedAnchor": { "x": 0.82, "y": 0.44 },
+            "normalizedScale": 0.18,
+            "rotationDegrees": -3.2,
+            "zIndexOrdinal": 4,
+            "contourRef": "frg_cornflower#contour"
+          }
+        ]
+      }
+    }
+  ],
+
+  "visualPack": {
+    "manifestRef": {
+      "archivePath": "visual-fragments.json",
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "approvedFragmentIds": ["frg_cornflower", "frg_towel_swatch"],
+    "directCount": 2,
+    "generatedCount": 0,
+    "generatedMaterialApproved": false
+  },
+
+  "evidenceMap": {
+    "archivePath": "evidence-map.json",
+    "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+  },
+
+  "fonts": [
+    {
+      "fontId": "fnt_display",
+      "family": "Example Display",
+      "version": "1.0",
+      "licenceId": "OFL-1.1",
+      "redistributable": true,
+      "scriptsCovered": ["Latn"],
+      "isSystemFont": false
+    },
+    {
+      "fontId": "fnt_text",
+      "family": "Example Text",
+      "version": "1.0",
+      "licenceId": "OFL-1.1",
+      "redistributable": true,
+      "scriptsCovered": ["Latn"],
+      "isSystemFont": false
+    }
+  ],
+
+  "preservation": {
+    "manifestRef": {
+      "archivePath": "preservation-manifest.json",
+      "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    "summary": { "authoritative": false, "objectCount": 9, "independentCopies": 2 }
+  },
+
+  "access": {
+    "visibility": "private",
+    "grants": [
+      {
+        "grantId": "grant_owner",
+        "role": "owner",
+        "subject": { "kind": "account", "accountRef": "acct_example" },
+        "capabilities": ["view", "edit", "export", "print"],
+        "grantedAt": "2026-08-26T09:00:00Z"
+      }
+    ],
+    "mediaVisibilityFollowsCapsule": true
+  },
+
+  "version": {
+    "versionId": "ver_base",
+    "ordinal": 0,
+    "parentVersionIds": [],
+    "kind": "base",
+    "authorPersonId": "per_creator",
+    "createdAt": "2026-08-26T11:05:00Z"
+  },
+
+  "generationProvenance": {
+    "producedBy": "agent",
+    "agentRun": {
+      "runId": "run_example_0001",
+      "attempt": 1,
+      "completedAt": "2026-08-26T11:05:00Z",
+      "skillVersions": {
+        "preserving-source-fidelity": "0.1.0",
+        "structuring-spoken-recipes": "0.1.0",
+        "composing-cookbook-pages": "0.1.0"
+      },
+      "toolContractVersion": "0.1.0",
+      "modelRef": "example-reasoning-model",
+      "modelVersionPin": null,
+      "reasoningEffort": "medium",
+      "tokenBudget": { "input": 125000, "output": 35000 },
+      "tokensUsed": { "input": 41230, "output": 8104 }
+    },
+    "validators": [
+      { "name": "schema", "version": "0.1.0", "status": "pass", "at": "2026-08-26T11:05:30Z" },
+      { "name": "provenance", "version": "0.1.0", "status": "pass", "at": "2026-08-26T11:05:31Z" }
+    ]
+  },
+
+  "renderings": [
+    {
+      "renderingId": "rnd_print",
+      "kind": "pdf",
+      "ref": {
+        "archivePath": "rendered/capsule.pdf",
+        "sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      "editionId": "ed_source",
+      "surface": "print",
+      "producedBy": { "name": "renderer", "version": "0.1.0" },
+      "canonical": false,
+      "regenerable": true
+    }
+  ]
+}

@@ -1,0 +1,985 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.pripev.com/v0/capsule.schema.json",
+  "title": "Pripev capsule document",
+  "description": "The canonical, schema-versioned rebuilding guide for one family recipe capsule. Two planes share only stable block identifiers: `blocks` carries content and names no fragment, font, colour or coordinate; `compositions` carries the artifact plane and carries no text. A layout-engine rewrite regenerates `compositions[*].realized` and touches nothing else. The document exists from ingest, not only after composition, and `stage` decides which sections are required and which are forbidden.",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": [
+    "schemaVersion", "schemaRevision", "migration", "capsuleId", "stage",
+    "createdAt", "updatedAt", "sourceLocale", "familySpaceId", "people",
+    "consent", "recordings", "preservation", "access", "version"
+  ],
+
+  "properties": {
+    "$comment": { "type": "string" },
+    "schemaVersion":  { "const": 0 },
+    "schemaRevision": { "type": "integer", "minimum": 0,
+                        "description": "Additive changes, including enum growth, bump this only." },
+
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaSha256", "history"],
+      "properties": {
+        "schemaSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["fromVersion", "fromRevision", "at", "tool", "toolVersion", "lossy"],
+            "properties": {
+              "fromVersion":  { "type": "integer", "minimum": 0 },
+              "fromRevision": { "type": "integer", "minimum": 0 },
+              "at":           { "type": "string", "format": "date-time" },
+              "tool":         { "type": "string" },
+              "toolVersion":  { "type": "string" },
+              "lossy":        { "type": "boolean" },
+              "notes":        { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "capsuleId":     { "$ref": "common.schema.json#/$defs/capsuleId" },
+    "familySpaceId": { "$ref": "common.schema.json#/$defs/familySpaceId" },
+
+    "stage": {
+      "enum": ["intake", "preserved", "transcript-review", "visual-review",
+               "composition-pending", "composed", "published"],
+      "description": "Gates the rest of the document. A capsule at transcript-review has no blocks, and saying so is a passing assertion rather than a gap."
+    },
+
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+
+    "sourceLocale": {
+      "$ref": "common.schema.json#/$defs/locale",
+      "description": "Primary spoken locale, used for type selection. Explicitly NOT authoritative over transcripts[].segments[].language, which is where code-switching lives."
+    },
+
+    "people": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["personId", "displayName"],
+        "properties": {
+          "personId":     { "$ref": "common.schema.json#/$defs/personId" },
+          "displayName":  { "type": "string", "minLength": 1 },
+          "relationship": { "type": "string", "description": "As the family chose to name it. Never inferred." },
+          "role":         { "enum": ["storyteller", "creator", "contributor", "recipient"] },
+          "birthYear":    { "type": "integer" },
+          "deceased":     { "type": "boolean" }
+        }
+      }
+    },
+
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uploaderAttestation", "storytellerAware"],
+      "properties": {
+        "uploaderAttestation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["attestedByPersonId", "at", "statement"],
+          "properties": {
+            "attestedByPersonId": { "$ref": "common.schema.json#/$defs/personId" },
+            "at":        { "type": "string", "format": "date-time" },
+            "statement": { "type": "string", "minLength": 1 },
+            "basis":     { "enum": ["recorded-with-knowledge", "lawfully-held-historical"] }
+          }
+        },
+        "storytellerAware": {
+          "type": "boolean",
+          "description": "The person recorded knew the conversation was being saved for the family. A gift may still be a surprise in its presentation."
+        },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "recordings": {
+      "type": "array",
+      "minItems": 1,
+      "description": "A capsule cannot exist without at least one authentic recording. Encoded as minItems, not as prose.",
+      "items": { "$ref": "#/$defs/recording" }
+    },
+
+    "artifacts": { "type": "array", "items": { "$ref": "#/$defs/artifact" } },
+
+    "transcripts": { "type": "array", "items": { "$ref": "#/$defs/transcript" } },
+
+    "claims": { "type": "array", "items": { "$ref": "#/$defs/claim" } },
+
+    "clarifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["clarificationId", "question", "aboutEvidence", "status"],
+        "properties": {
+          "clarificationId": { "$ref": "common.schema.json#/$defs/clarificationId" },
+          "question":  { "type": "string", "minLength": 1,
+                         "description": "One focused question the family can answer in a recording. Never an answer, and never external cooking guidance." },
+          "aboutEvidence": { "type": "array", "minItems": 1,
+                             "items": { "$ref": "common.schema.json#/$defs/evidenceId" } },
+          "status":    { "enum": ["open", "answered", "declined"] },
+          "answeredByRecordingId": { "$ref": "common.schema.json#/$defs/recordingId" },
+          "visibleOnPublishedPage": { "const": false,
+                                      "description": "The suggestion box never appears on a finished or public page." }
+        }
+      }
+    },
+
+    "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/block" } },
+
+    "audioAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordingId", "anchorBlockId"],
+      "description": "Where the primary player sits in reading order. Distinct from a voice-chapter block.",
+      "properties": {
+        "recordingId":   { "$ref": "common.schema.json#/$defs/recordingId" },
+        "anchorBlockId": { "$ref": "common.schema.json#/$defs/blockId" },
+        "autoplay":      { "const": false }
+      }
+    },
+
+    "editions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/edition" } },
+
+    "compositions": { "type": "array", "items": { "$ref": "#/$defs/composition" } },
+
+    "visualPack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestRef", "approvedFragmentIds"],
+      "properties": {
+        "manifestRef":         { "$ref": "common.schema.json#/$defs/hashRef" },
+        "approvedFragmentIds": { "type": "array",
+                                 "items": { "$ref": "common.schema.json#/$defs/fragmentId" },
+                                 "description": "The allowlist. Any fragment referenced by a composition must appear here, which is how unapproved material is kept off a page by construction." },
+        "directCount":    { "type": "integer", "minimum": 0 },
+        "generatedCount": { "type": "integer", "minimum": 0 },
+        "generatedMaterialApproved": { "type": "boolean" }
+      }
+    },
+
+    "evidenceMap": { "$ref": "common.schema.json#/$defs/hashRef" },
+
+    "fonts": {
+      "type": "array",
+      "description": "A snapshot of the registry entries this capsule depends on, not the registry itself. Enough to reconstruct offline.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fontId", "family", "version", "licenceId", "redistributable", "scriptsCovered"],
+        "properties": {
+          "fontId":          { "$ref": "common.schema.json#/$defs/fontId" },
+          "family":          { "type": "string", "minLength": 1 },
+          "version":         { "type": "string" },
+          "licenceId":       { "type": "string" },
+          "licenceUrl":      { "type": "string", "format": "uri" },
+          "redistributable": { "type": "boolean" },
+          "scriptsCovered":  { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "subsetRef":       { "$ref": "common.schema.json#/$defs/hashRef" },
+          "isSystemFont":    { "const": false,
+                               "description": "Generic system fonts are banned from every finished capsule. A font-load failure is a failed render to repair, not an acceptable fallback." }
+        }
+      }
+    },
+
+    "preservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestRef"],
+      "properties": {
+        "manifestRef": { "$ref": "common.schema.json#/$defs/hashRef" },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Convenience only. The manifest is authoritative; this may be stale.",
+          "properties": {
+            "authoritative":   { "const": false },
+            "objectCount":     { "type": "integer", "minimum": 0 },
+            "retainedBytes":   { "type": "integer", "minimum": 0 },
+            "independentCopies": { "type": "integer", "minimum": 0 },
+            "lastVerifiedAt":  { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+
+    "access": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visibility", "grants", "mediaVisibilityFollowsCapsule"],
+      "properties": {
+        "visibility": {
+          "enum": ["private", "public"],
+          "description": "Exactly two states. Invite-only sharing is access inside the private state, not a third value."
+        },
+        "publicConsent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["confirmedByPersonId", "at", "secondConfirmation"],
+          "properties": {
+            "confirmedByPersonId": { "$ref": "common.schema.json#/$defs/personId" },
+            "at": { "type": "string", "format": "date-time" },
+            "secondConfirmation": { "const": true }
+          }
+        },
+        "grants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["grantId", "role", "subject", "capabilities", "grantedAt"],
+            "properties": {
+              "grantId": { "type": "string", "minLength": 1 },
+              "role":    { "enum": ["owner", "editor", "contributor", "listener"] },
+              "subject": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["kind", "accountRef"],
+                    "properties": {
+                      "kind":       { "const": "account" },
+                      "accountRef": { "type": "string", "minLength": 1 }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["kind", "codeSha256"],
+                    "description": "Access codes are stored hashed. Plaintext is never representable.",
+                    "properties": {
+                      "kind":       { "const": "access-code" },
+                      "codeSha256": { "$ref": "common.schema.json#/$defs/sha256" },
+                      "label":      { "type": "string" }
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "type": "array",
+                "items": { "enum": ["view", "edit", "fork", "propose", "export", "print"] }
+              },
+              "grantedAt": { "type": "string", "format": "date-time" },
+              "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+              "revokedAt": { "type": ["string", "null"], "format": "date-time" }
+            }
+          }
+        },
+        "mediaVisibilityFollowsCapsule": {
+          "const": true,
+          "description": "A public title with private audio is named a future control in the proposal. Pinning this to true means the MVP cannot imply it by accident."
+        }
+      },
+      "if": { "properties": { "visibility": { "const": "public" } } },
+      "then": { "required": ["visibility", "grants", "mediaVisibilityFollowsCapsule", "publicConsent"] }
+    },
+
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["versionId", "ordinal", "parentVersionIds", "kind", "createdAt"],
+      "properties": {
+        "versionId":        { "$ref": "common.schema.json#/$defs/versionId" },
+        "ordinal":          { "type": "integer", "minimum": 0 },
+        "parentVersionIds": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/versionId" } },
+        "kind":             { "enum": ["base", "edit", "merge", "fork", "locale", "recomposition"] },
+        "authorPersonId":   { "$ref": "common.schema.json#/$defs/personId" },
+        "createdAt":        { "type": "string", "format": "date-time" },
+        "note":             { "type": "string" }
+      }
+    },
+
+    "versionGraph": {
+      "type": "array",
+      "description": "Metadata only. Version bodies are separate documents.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["versionId", "parentVersionIds", "createdAt", "kind"],
+        "properties": {
+          "versionId":        { "$ref": "common.schema.json#/$defs/versionId" },
+          "parentVersionIds": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/versionId" } },
+          "createdAt":        { "type": "string", "format": "date-time" },
+          "authorPersonId":   { "$ref": "common.schema.json#/$defs/personId" },
+          "kind":             { "enum": ["base", "edit", "merge", "fork", "locale", "recomposition"] }
+        }
+      }
+    },
+
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "originCapsuleId":    { "$ref": "common.schema.json#/$defs/capsuleId" },
+        "forkedFromVersionId": { "$ref": "common.schema.json#/$defs/versionId" }
+      }
+    },
+
+    "generationProvenance": { "$ref": "#/$defs/generationProvenance" },
+
+    "renderings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["renderingId", "kind", "ref", "canonical", "regenerable"],
+        "properties": {
+          "renderingId": { "type": "string", "minLength": 1 },
+          "kind":        { "enum": ["html", "pdf", "png-snapshot"] },
+          "ref":         { "$ref": "common.schema.json#/$defs/hashRef" },
+          "editionId":   { "$ref": "common.schema.json#/$defs/editionId" },
+          "surface":     { "enum": ["desktop", "tablet", "phone", "print"] },
+          "producedBy":  { "$ref": "common.schema.json#/$defs/pipelineRef" },
+          "canonical":   { "const": false,
+                           "description": "Rendered output is never the truth. Three characters of schema; one class of drift prevented." },
+          "regenerable": { "const": true }
+        }
+      }
+    },
+
+    "siblingCapsuleIds": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/capsuleId" },
+      "description": "One recording containing several recipes becomes several capsules, each separately quoted and approved."
+    },
+
+    "exportRedactions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What the portable export removed, so that reconstruction is honest about absence rather than silently incomplete."
+    }
+  },
+
+  "allOf": [
+    {
+      "$comment": "Composition-stage requirements. Below `composed`, the content and artifact planes must be absent, which is what lets an honestly incomplete capsule validate.",
+      "if": {
+        "properties": { "stage": { "enum": ["composed", "published"] } },
+        "required": ["stage"]
+      },
+      "then": {
+        "required": ["blocks", "audioAnchor", "editions", "compositions",
+                     "evidenceMap", "visualPack", "fonts", "generationProvenance"]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            { "required": ["blocks"] },
+            { "required": ["audioAnchor"] },
+            { "required": ["compositions"] },
+            { "required": ["claims"] }
+          ]
+        }
+      }
+    },
+    {
+      "$comment": "Transcripts exist from the transcript-review gate onward.",
+      "if": {
+        "properties": { "stage": { "enum": ["transcript-review", "visual-review", "composition-pending", "composed", "published"] } },
+        "required": ["stage"]
+      },
+      "then": { "required": ["transcripts"] }
+    },
+    {
+      "$comment": "The approved visual pack exists from the visual gate onward.",
+      "if": {
+        "properties": { "stage": { "enum": ["visual-review", "composition-pending", "composed", "published"] } },
+        "required": ["stage"]
+      },
+      "then": { "required": ["visualPack"] }
+    }
+  ],
+
+  "$defs": {
+    "recording": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recordingId", "role", "original", "retentionClass"],
+      "properties": {
+        "recordingId": { "$ref": "common.schema.json#/$defs/recordingId" },
+        "role": { "enum": ["source", "clarification"],
+                  "description": "A clarification is a recording in its own right, never a derivative of the first." },
+        "answersClarificationId": { "$ref": "common.schema.json#/$defs/clarificationId" },
+        "contributorPersonId":    { "$ref": "common.schema.json#/$defs/personId" },
+        "capturedAt":          { "type": ["string", "null"] },
+        "capturedAtPrecision": { "enum": ["day", "month", "year", "unknown"] },
+        "original": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ref", "durationSeconds"],
+          "properties": {
+            "ref":              { "$ref": "common.schema.json#/$defs/hashRef" },
+            "originalFilename": { "type": "string" },
+            "container":        { "type": "string" },
+            "codec":            { "type": "string" },
+            "sampleRateHz":     { "type": "integer", "minimum": 1 },
+            "channels":         { "type": "integer", "minimum": 1 },
+            "durationSeconds":  { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "playback": {
+          "type": "array",
+          "description": "Derivatives are nested inside the object they derive from, so they can never float free of a source.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ref", "mimeType", "regenerable"],
+            "properties": {
+              "ref":         { "$ref": "common.schema.json#/$defs/hashRef" },
+              "mimeType":    { "type": "string" },
+              "regenerable": { "const": true },
+              "pipeline":    { "$ref": "common.schema.json#/$defs/pipelineRef" }
+            }
+          }
+        },
+        "retentionClass": { "const": "irreplaceable-source" }
+      },
+      "if": { "properties": { "role": { "const": "clarification" } }, "required": ["role"] },
+      "then": { "required": ["recordingId", "role", "original", "retentionClass", "answersClarificationId"] }
+    },
+
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "ref", "mimeType", "width", "height", "retentionClass"],
+      "properties": {
+        "artifactId": { "$ref": "common.schema.json#/$defs/artifactId" },
+        "ref":        { "$ref": "common.schema.json#/$defs/hashRef" },
+        "originalFilename": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "width":    { "type": "integer", "minimum": 1 },
+        "height":   { "type": "integer", "minimum": 1 },
+        "workingDescription": { "type": "string" },
+        "descriptionProvenance": {
+          "enum": ["observer-working-label", "vision-proposed", "family-confirmed"]
+        },
+        "familyConfirmed":  { "type": "boolean" },
+        "publicUseApproved": { "type": "boolean" },
+        "retentionClass":   { "const": "irreplaceable-source" }
+      }
+    },
+
+    "transcript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transcriptId", "recordingId", "kind", "ordinal", "timeAligned", "segments", "retentionClass"],
+      "properties": {
+        "transcriptId": { "$ref": "common.schema.json#/$defs/transcriptId" },
+        "recordingId":  { "$ref": "common.schema.json#/$defs/recordingId" },
+        "kind": { "enum": ["machine", "family-corrected"] },
+        "ordinal": { "type": "integer", "minimum": 0 },
+        "parentTranscriptId": { "$ref": "common.schema.json#/$defs/transcriptId" },
+        "producedBy": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "An audit label. No part of this schema branches on it, and no provider response envelope is representable.",
+          "properties": {
+            "engineFamily":     { "type": "string" },
+            "engineRef":        { "type": "string" },
+            "engineVersionPin": { "type": ["string", "null"] },
+            "at":               { "type": "string" }
+          }
+        },
+        "timeAligned":     { "type": "boolean" },
+        "alignmentMethod": { "enum": ["asr-segment", "forced", "none"] },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["segmentId", "text", "language", "languageSource"],
+            "properties": {
+              "segmentId": { "$ref": "common.schema.json#/$defs/segmentId" },
+              "start": { "type": "number", "minimum": 0 },
+              "end":   { "type": "number", "minimum": 0 },
+              "text":  { "type": "string" },
+              "language": {
+                "$ref": "common.schema.json#/$defs/locale",
+                "description": "Per segment, so that code-switching survives rather than being flattened to a document default."
+              },
+              "languageSource": { "enum": ["detected", "document-default", "family-confirmed"] },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "corrections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["correctionId", "targetSegmentId", "previousText", "correctedText", "authorPersonId", "at"],
+            "properties": {
+              "correctionId":    { "type": "string", "minLength": 1 },
+              "targetSegmentId": { "$ref": "common.schema.json#/$defs/segmentId" },
+              "previousText":    { "type": "string" },
+              "correctedText":   { "type": "string" },
+              "reason":          { "type": "string" },
+              "authorPersonId":  { "$ref": "common.schema.json#/$defs/personId" },
+              "at":              { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "retentionClass": { "const": "accepted-authored-state" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "family-corrected" } }, "required": ["kind"] },
+          "then": { "required": ["transcriptId", "recordingId", "kind", "ordinal", "timeAligned", "segments", "retentionClass", "parentTranscriptId", "corrections"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "machine" } }, "required": ["kind"] },
+          "then": { "not": { "required": ["corrections"] } }
+        },
+        {
+          "if": { "properties": { "timeAligned": { "const": true } }, "required": ["timeAligned"] },
+          "then": { "properties": { "segments": { "items": { "required": ["segmentId", "text", "language", "languageSource", "start", "end"] } } } }
+        }
+      ]
+    },
+
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claimId", "kind", "truth", "evidence"],
+      "description": "First-class and separate from blocks, because an unresolved claim has no text and therefore no block, yet must still be representable.",
+      "properties": {
+        "claimId": { "$ref": "common.schema.json#/$defs/claimId" },
+        "kind": {
+          "enum": ["ingredient", "quantity", "action", "duration", "temperature",
+                   "vessel", "doneness-cue", "sensory-cue", "household-measure",
+                   "warning", "story", "person", "provenance-fact"]
+        },
+        "truth": {
+          "enum": ["captured", "family-confirmed", "interpreted",
+                   "contradicted", "unresolved", "clarification-requested"]
+        },
+        "evidence": { "type": "array", "minItems": 1,
+                      "items": { "$ref": "common.schema.json#/$defs/evidenceId" } },
+        "text": { "type": "string" },
+        "derivedFrom": { "type": "array", "minItems": 1,
+                         "items": { "$ref": "common.schema.json#/$defs/claimId" } },
+        "presentationOnly": { "type": "boolean" },
+        "conflictsWith": { "type": "array", "minItems": 1,
+                           "items": { "$ref": "common.schema.json#/$defs/claimId" } },
+        "clarificationId": { "$ref": "common.schema.json#/$defs/clarificationId" },
+        "confirmedBy": { "$ref": "common.schema.json#/$defs/personId" }
+      },
+      "allOf": [
+        {
+          "$comment": "A normalized estimate never stands alone, and can never be cited as a source fact.",
+          "if": { "properties": { "truth": { "const": "interpreted" } }, "required": ["truth"] },
+          "then": {
+            "required": ["claimId", "kind", "truth", "evidence", "derivedFrom", "presentationOnly"],
+            "properties": { "presentationOnly": { "const": true } }
+          }
+        },
+        {
+          "if": { "properties": { "truth": { "const": "contradicted" } }, "required": ["truth"] },
+          "then": { "required": ["claimId", "kind", "truth", "evidence", "conflictsWith"] }
+        },
+        {
+          "if": { "properties": { "truth": { "const": "clarification-requested" } }, "required": ["truth"] },
+          "then": { "required": ["claimId", "kind", "truth", "evidence", "clarificationId"] }
+        },
+        {
+          "if": { "properties": { "truth": { "const": "family-confirmed" } }, "required": ["truth"] },
+          "then": { "required": ["claimId", "kind", "truth", "evidence", "confirmedBy"] }
+        },
+        {
+          "$comment": "An unresolved claim is a gap with an identity. It carries no text, because there is nothing to say.",
+          "if": { "properties": { "truth": { "const": "unresolved" } }, "required": ["truth"] },
+          "then": { "not": { "required": ["text"] } }
+        }
+      ]
+    },
+
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blockId", "type"],
+      "properties": {
+        "blockId": { "$ref": "common.schema.json#/$defs/blockId" },
+        "type": {
+          "enum": ["title", "prose", "transcript-quote", "voice-chapter",
+                   "ingredient-group", "ingredient-line", "step-group",
+                   "instruction-line", "sensory-cue", "household-measure",
+                   "family-aside", "storage-note", "warning", "unresolved-note",
+                   "clarification-note", "variation", "person-card",
+                   "artifact-figure", "short-list", "checklist", "caption",
+                   "divider", "collage-anchor"],
+          "description": "There is deliberately no heading type. A cookbook page has rules, circles and marks, not an article's hierarchy."
+        },
+        "text": { "type": "string" },
+        "marks": {
+          "type": "array",
+          "description": "The cookbook grammar that replaces web typography. No bold, no italic.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "start", "end"],
+            "properties": {
+              "type": { "enum": ["circle", "underline", "highlight", "rule-above",
+                                 "rule-below", "numbered", "bulleted", "marginal-note"] },
+              "start": { "type": "integer", "minimum": 0 },
+              "end":   { "type": "integer", "minimum": 0 },
+              "note":  { "type": "string" }
+            }
+          }
+        },
+        "evidence":  { "type": "array", "items": { "$ref": "common.schema.json#/$defs/evidenceId" } },
+        "claimRefs": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/claimId" } },
+        "children":  { "type": "array", "items": { "$ref": "#/$defs/block" } },
+        "recordingRange": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["recordingId", "start", "end"],
+          "properties": {
+            "recordingId": { "$ref": "common.schema.json#/$defs/recordingId" },
+            "start": { "type": "number", "minimum": 0 },
+            "end":   { "type": "number", "minimum": 0 }
+          }
+        },
+        "fragmentId": { "$ref": "common.schema.json#/$defs/fragmentId" },
+        "authoredBy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind":     { "enum": ["agent", "family"] },
+            "personId": { "$ref": "common.schema.json#/$defs/personId" },
+            "at":       { "type": "string", "format": "date-time" }
+          }
+        },
+        "locked": { "type": "boolean",
+                    "description": "The family pinned it. Recomposition may not move or rewrite it." }
+      },
+      "allOf": [
+        {
+          "$comment": "Every factual block carries at least one evidence link. This is the schema-level encoding of source fidelity.",
+          "if": {
+            "properties": {
+              "type": { "enum": ["ingredient-line", "instruction-line", "household-measure",
+                                 "sensory-cue", "warning", "storage-note",
+                                 "transcript-quote", "voice-chapter"] }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["blockId", "type", "evidence"],
+            "properties": { "evidence": { "minItems": 1 } }
+          }
+        },
+        {
+          "$comment": "A collage anchor is a position in reading order and carries no visual data. The collage itself lives on the artifact plane.",
+          "if": { "properties": { "type": { "const": "collage-anchor" } }, "required": ["type"] },
+          "then": { "not": { "anyOf": [{ "required": ["text"] }, { "required": ["fragmentId"] }] } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "unresolved-note" } }, "required": ["type"] },
+          "then": { "required": ["blockId", "type", "claimRefs"] }
+        }
+      ]
+    },
+
+    "edition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["editionId", "locale", "kind"],
+      "description": "A locale edition recomposes type and geometry for a language. It never becomes a separate truth source, so it carries no evidence and no claims of its own.",
+      "properties": {
+        "editionId": { "$ref": "common.schema.json#/$defs/editionId" },
+        "locale":    { "$ref": "common.schema.json#/$defs/locale" },
+        "kind":      { "enum": ["source", "translation"] },
+        "derivedFromEditionId": { "type": ["string", "null"] },
+        "blockText": {
+          "type": "object",
+          "description": "Keyed by blockId. A translation may not introduce, remove or reorder a block.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text"],
+            "properties": {
+              "text":  { "type": "string" },
+              "marks": { "type": "array", "items": { "type": "object" } }
+            }
+          }
+        },
+        "titleOverride": { "type": ["string", "null"] },
+        "translatedBy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind":       { "enum": ["human", "machine"] },
+            "ref":        { "type": "string" },
+            "reviewedBy": { "$ref": "common.schema.json#/$defs/personId" }
+          }
+        }
+      },
+      "if": { "properties": { "kind": { "const": "translation" } }, "required": ["kind"] },
+      "then": { "required": ["editionId", "locale", "kind", "derivedFromEditionId"] }
+    },
+
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compositionId", "editionId", "intent"],
+      "properties": {
+        "compositionId": { "$ref": "common.schema.json#/$defs/compositionId" },
+        "editionId":     { "$ref": "common.schema.json#/$defs/editionId" },
+
+        "intent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scatterSeed", "tokens"],
+          "description": "Agent-authored and engine-independent. Durable across a layout rewrite.",
+          "properties": {
+            "designSeed": {
+              "type": ["object", "null"],
+              "additionalProperties": false,
+              "required": ["capsuleId", "versionId"],
+              "properties": {
+                "capsuleId": { "$ref": "common.schema.json#/$defs/capsuleId" },
+                "versionId": { "$ref": "common.schema.json#/$defs/versionId" }
+              }
+            },
+            "scatterSeed": { "type": "string", "pattern": "^0x[0-9a-f]{4,16}$" },
+            "tokens": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["typeStack", "palette"],
+              "properties": {
+                "typeStack": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["role", "fontId"],
+                    "description": "A font identifier into the registry snapshot. A font-family string is not representable, so a name cannot be invented.",
+                    "properties": {
+                      "role":   { "enum": ["display", "text", "accent", "caption"] },
+                      "fontId": { "$ref": "common.schema.json#/$defs/fontId" }
+                    }
+                  }
+                },
+                "palette": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["paperTint", "ink"],
+                  "properties": {
+                    "paperTint": { "$ref": "common.schema.json#/$defs/hexColor" },
+                    "ink":       { "$ref": "common.schema.json#/$defs/hexColor" },
+                    "accents":   { "type": "array", "items": { "$ref": "common.schema.json#/$defs/hexColor" } },
+                    "sampledFromFragmentIds": {
+                      "type": "array",
+                      "items": { "$ref": "common.schema.json#/$defs/fragmentId" },
+                      "description": "An all-over-pattern fragment has no figure to cut out. It is where the palette comes from."
+                    }
+                  }
+                },
+                "rhythm": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "measureRange":   { "type": "array", "minItems": 2, "maxItems": 2,
+                                        "items": { "type": "integer", "minimum": 20, "maximum": 120 } },
+                    "leadingScale":   { "type": "number", "minimum": 1, "maximum": 3 },
+                    "sectionSpacing": { "enum": ["tight", "even", "generous"] }
+                  }
+                }
+              }
+            },
+            "clusters": { "type": "array", "items": { "$ref": "#/$defs/cluster" } },
+            "freeFragments": { "type": "array", "items": { "$ref": "#/$defs/freePlacement" } },
+            "userAdjustments": { "type": "array", "items": { "$ref": "#/$defs/userAdjustment" } },
+            "printProfileRef": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["profileId", "version"],
+              "properties": {
+                "profileId": { "type": "string" },
+                "version":   { "type": "string" }
+              }
+            }
+          }
+        },
+
+        "realized": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rulesetVersion", "regenerable", "placements"],
+          "description": "Engine-authored and REGENERABLE. Discarded, never migrated, when rulesetVersion no longer matches.",
+          "properties": {
+            "rulesetVersion": { "type": "string", "minLength": 1 },
+            "generatedAt":    { "type": "string", "format": "date-time" },
+            "regenerable":    { "const": true },
+            "placements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["placementId", "normalizedAnchor", "normalizedScale"],
+                "properties": {
+                  "placementId":      { "$ref": "common.schema.json#/$defs/placementId" },
+                  "normalizedAnchor": { "$ref": "common.schema.json#/$defs/normalizedPoint" },
+                  "normalizedScale":  { "$ref": "common.schema.json#/$defs/normalizedUnit" },
+                  "rotationDegrees":  { "type": "number", "minimum": -45, "maximum": 45 },
+                  "zIndexOrdinal":    { "type": "integer", "minimum": 0 },
+                  "contourRef":       { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clusterId", "role", "anchor", "memberFragmentIds", "densityRange", "density"],
+      "properties": {
+        "clusterId": { "$ref": "common.schema.json#/$defs/clusterId" },
+        "role": { "enum": ["opening-banner", "vertical-rail", "horizontal-divider", "side-spacer"] },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["blockId", "relation"],
+          "properties": {
+            "blockId":  { "$ref": "common.schema.json#/$defs/blockId" },
+            "relation": { "enum": ["before", "after", "beside"] }
+          }
+        },
+        "memberFragmentIds": { "type": "array", "minItems": 1,
+                               "items": { "$ref": "common.schema.json#/$defs/fragmentId" } },
+        "densityRange":  { "$ref": "common.schema.json#/$defs/normalizedRange" },
+        "density":       { "$ref": "common.schema.json#/$defs/normalizedUnit" },
+        "overlapRange":  { "$ref": "common.schema.json#/$defs/normalizedRange" },
+        "clusterScatterSeed": { "type": "string", "pattern": "^0x[0-9a-f]{2,16}$" },
+        "wrapPriority":  { "type": "integer", "minimum": 1, "maximum": 5 },
+        "surfaces": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "phone":  { "enum": ["simplify", "keep", "drop"] },
+            "tablet": { "enum": ["simplify", "keep", "drop"] },
+            "print":  { "enum": ["simplify", "keep", "drop"] }
+          }
+        }
+      }
+    },
+
+    "freePlacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["placementId", "fragmentId", "anchor"],
+      "properties": {
+        "placementId": { "$ref": "common.schema.json#/$defs/placementId" },
+        "fragmentId":  { "$ref": "common.schema.json#/$defs/fragmentId" },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["blockId", "side"],
+          "properties": {
+            "blockId": { "$ref": "common.schema.json#/$defs/blockId" },
+            "side":    { "enum": ["left", "right", "inline"] }
+          }
+        },
+        "eligibleZones": { "type": "array", "items": { "type": "string" } },
+        "wrapPriority":  { "type": "integer", "minimum": 1, "maximum": 5 },
+        "layerHint":     { "enum": ["above-paper", "below-text"] },
+        "scaleRange":    { "$ref": "common.schema.json#/$defs/normalizedRange" },
+        "rotationRangeDegrees": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min", "max"],
+          "properties": {
+            "min": { "type": "number", "minimum": -45, "maximum": 45 },
+            "max": { "type": "number", "minimum": -45, "maximum": 45 }
+          }
+        }
+      }
+    },
+
+    "userAdjustment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetId", "kind", "authorPersonId", "at"],
+      "description": "A human drag, normalized. Durable across an engine rewrite, unlike realized geometry.",
+      "properties": {
+        "targetId": { "type": "string", "pattern": "^(clu|plc|blk)_[0-9A-Za-z_-]{1,40}$" },
+        "kind": { "enum": ["move", "scale", "rotate", "layer", "hide", "pin", "density"] },
+        "value": {
+          "oneOf": [
+            { "$ref": "common.schema.json#/$defs/normalizedPoint" },
+            { "$ref": "common.schema.json#/$defs/normalizedUnit" },
+            { "type": "integer" },
+            { "type": "boolean" }
+          ]
+        },
+        "surface":        { "type": ["string", "null"], "enum": ["desktop", "tablet", "phone", "print", null] },
+        "authorPersonId": { "$ref": "common.schema.json#/$defs/personId" },
+        "at":             { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "generationProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producedBy"],
+      "properties": {
+        "producedBy": { "enum": ["agent", "human", "migration"] },
+        "agentRun": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runId", "attempt", "completedAt", "skillVersions", "toolContractVersion"],
+          "properties": {
+            "runId":   { "type": "string", "minLength": 1 },
+            "attempt": { "type": "integer", "minimum": 1 },
+            "completedAt": { "type": "string", "format": "date-time" },
+            "skillVersions": { "type": "object", "additionalProperties": { "type": "string" } },
+            "toolContractVersion": { "type": "string" },
+            "modelRef":        { "type": "string", "description": "Audit label only. Nothing in this schema branches on it." },
+            "modelVersionPin": { "type": ["string", "null"] },
+            "reasoningEffort": { "enum": ["low", "medium", "high"] },
+            "tokenBudget": {
+              "type": "object", "additionalProperties": false,
+              "properties": { "input": { "type": "integer" }, "output": { "type": "integer" } }
+            },
+            "tokensUsed": {
+              "type": "object", "additionalProperties": false,
+              "properties": { "input": { "type": "integer" }, "output": { "type": "integer" } }
+            }
+          }
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "version", "status", "at"],
+            "properties": {
+              "name":    { "type": "string" },
+              "version": { "type": "string" },
+              "status":  { "enum": ["pass", "fail"] },
+              "at":      { "type": "string", "format": "date-time" },
+              "detail":  { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

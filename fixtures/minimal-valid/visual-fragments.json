@@ -1,0 +1,92 @@
+{
+  "$comment": "Synthetic. Two fragments, one per extraction class that produces a usable cutout, plus the pattern class that produces a swatch and a palette instead.",
+  "schemaVersion": 1,
+  "assetType": "direct-pixel-cutout",
+  "status": "approved",
+  "capsuleId": "cap_01JQ8XZ4M7N2P5R8T0V3W6Y9AB",
+  "generatedAt": "2026-08-26T10:40:00Z",
+  "items": [
+    {
+      "id": "frg_cornflower",
+      "assetType": "direct-pixel-cutout",
+      "sourceImageId": "art_tea_towel",
+      "sourceImageSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "extractionClass": "graphic-on-flat-field",
+      "outputMode": "motif",
+      "extractionMethod": "line-trace",
+      "maskSemantics": "keyed-field",
+      "label": {
+        "display": "Printed cornflower from the tea towel border",
+        "object": "cornflower",
+        "material": "printed cotton",
+        "dominantColors": ["#4a6d8c", "#f4efe6"],
+        "orientation": "upright",
+        "visualWeight": "light",
+        "eligibleRoles": ["opening-banner", "side-spacer", "free"],
+        "provenance": "family-confirmed"
+      },
+      "maskPath": "visuals/approved-cutouts/frg_cornflower/mask.png",
+      "maskSha256": "8888888888888888888888888888888888888888888888888888888888888888",
+      "alphaPngPath": "visuals/approved-cutouts/frg_cornflower/cutout.png",
+      "alphaPngSha256": "9999999999999999999999999999999999999999999999999999999999999999",
+      "contourPath": "visuals/approved-cutouts/frg_cornflower/contour.json",
+      "contourSha256": "aaaa111111111111111111111111111111111111111111111111111111111111",
+      "vectorPath": null,
+      "sourceTransform": {
+        "normalizedBox": [0.12, 0.34, 0.18, 0.22],
+        "cropPixels": [245, 522, 368, 338],
+        "sourceWidth": 2048,
+        "sourceHeight": 1536,
+        "areaRatio": 0.0396,
+        "contourPointCount": 41
+      },
+      "reviewDecision": "approved",
+      "reviewOrigin": "auto-proposed",
+      "reviewedByPersonId": "per_creator",
+      "reviewedAt": "2026-08-26T10:38:00Z",
+      "privacyState": "private"
+    },
+    {
+      "id": "frg_towel_swatch",
+      "assetType": "direct-pixel-cutout",
+      "sourceImageId": "art_tea_towel",
+      "sourceImageSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "extractionClass": "all-over-pattern",
+      "outputMode": "editorial-cutout",
+      "extractionMethod": "torn-crop",
+      "maskSemantics": "torn-crop",
+      "label": {
+        "display": "Torn swatch of the repeating cornflower weave",
+        "object": "woven pattern",
+        "material": "printed cotton",
+        "dominantColors": ["#4a6d8c", "#f4efe6", "#c9bda4"],
+        "orientation": "flat",
+        "visualWeight": "medium",
+        "eligibleRoles": ["horizontal-divider", "side-spacer"],
+        "provenance": "vision-proposed"
+      },
+      "maskPath": "visuals/approved-cutouts/frg_towel_swatch/mask.png",
+      "maskSha256": "bbbb111111111111111111111111111111111111111111111111111111111111",
+      "alphaPngPath": "visuals/approved-cutouts/frg_towel_swatch/cutout.png",
+      "alphaPngSha256": "cccc111111111111111111111111111111111111111111111111111111111111",
+      "contourPath": "visuals/approved-cutouts/frg_towel_swatch/contour.json",
+      "contourSha256": "dddd111111111111111111111111111111111111111111111111111111111111",
+      "vectorPath": null,
+      "sourceTransform": {
+        "normalizedBox": [0.4, 0.1, 0.35, 0.3],
+        "cropPixels": [819, 153, 716, 460],
+        "sourceWidth": 2048,
+        "sourceHeight": 1536,
+        "areaRatio": 0.105,
+        "contourPointCount": 12
+      },
+      "palette": ["#4a6d8c", "#f4efe6", "#c9bda4", "#8a9bb0"],
+      "swatchScales": [1, 2, 3],
+      "reviewDecision": "approved",
+      "reviewOrigin": "user-circled",
+      "reviewedByPersonId": "per_creator",
+      "reviewedAt": "2026-08-26T10:39:00Z",
+      "privacyState": "private"
+    }
+  ]
+}
