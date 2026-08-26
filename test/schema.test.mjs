@@ -188,3 +188,43 @@ test("a machine transcript cannot carry corrections", () => {
   });
   assert.ok(failures.some((f) => f.includes("schema")), failures.join("\n"));
 });
+
+// --- Paper physicality, added in Phase B ------------------------------------
+// A cutout has to look torn out of a magazine rather than cut by a machine.
+// The risk that creates is that the tearing gets baked into the preserved
+// alpha, which cannot be undone when the treatment vocabulary changes.
+
+test("a paper treatment is parameters, not pixels", () => {
+  const manifest = fragments();
+  const item = manifest.items[0];
+  item.paperTreatment = { treatment: "torn", seed: 4211, borderRetentionPx: 12, appliedTo: "derivative" };
+  assert.equal(validate("visual-fragment-manifest.schema.json", manifest).valid, true);
+});
+
+test("a treatment cannot claim to have been applied to the canonical alpha", () => {
+  const manifest = fragments();
+  manifest.items[0].paperTreatment = { treatment: "torn", seed: 1, appliedTo: "canonical" };
+  const result = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(result.valid, false, "the canonical matte must survive the treatment");
+});
+
+test("an unknown treatment is refused rather than passed through", () => {
+  const manifest = fragments();
+  manifest.items[0].paperTreatment = { treatment: "artistic-vibe", seed: 1 };
+  assert.equal(validate("visual-fragment-manifest.schema.json", manifest).valid, false);
+});
+
+test("the treated render lives with the approved cutouts, not loose", () => {
+  const manifest = fragments();
+  manifest.items[0].paperRenderPath = "tmp/scratch/render.png";
+  assert.equal(validate("visual-fragment-manifest.schema.json", manifest).valid, false);
+});
+
+test("fragment quality is measured, and its verdict is a closed set", () => {
+  const manifest = fragments();
+  manifest.items[0].quality = { components: 5, coverage: 0.004, rectangularity: 0.2, verdict: "unusable" };
+  assert.equal(validate("visual-fragment-manifest.schema.json", manifest).valid, true);
+
+  manifest.items[0].quality.verdict = "probably fine";
+  assert.equal(validate("visual-fragment-manifest.schema.json", manifest).valid, false);
+});
