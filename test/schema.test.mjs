@@ -7,6 +7,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -31,6 +32,16 @@ const load = (name) =>
 const capsule = () => load("capsule.json");
 const evidenceMap = () => load("evidence-map.json");
 const fragments = () => load("visual-fragments.json");
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+const treatmentHash = (value) => createHash("sha256").update(stableJson(value ?? null)).digest("hex");
 
 function v2Fragments() {
   const manifest = fragments();
@@ -66,6 +77,7 @@ function v2Fragments() {
       selectionOrigin: "automatic-recommended",
       reviewedCanonicalAlphaSha256: item.alphaPngSha256,
       reviewedRenderSha256: item.alphaPngSha256,
+      paperTreatmentSha256: treatmentHash(item.paperTreatment),
     };
     const identity = visualCandidateIdentity(manifest, bound);
     return {
@@ -195,6 +207,20 @@ test("changing a reviewed pixel hash invalidates a V2 candidate", () => {
   const manifest = v2Fragments();
   manifest.items[0].alphaPngSha256 = "7".repeat(64);
   assert.ok(checkVisualRunBindings(manifest).some((failure) => /identity|reviewed alpha/.test(failure)));
+});
+
+test("changing only paper treatment parameters invalidates a V2 candidate", () => {
+  const manifest = v2Fragments();
+  manifest.items[0].paperTreatment = {
+    treatment: "cream-sticker-border",
+    seed: 41,
+    borderPx: 18,
+    creamHex: "#f5ecd8",
+    shadowOpacity: 0.14,
+    appliedTo: "derivative",
+  };
+  const failures = checkVisualRunBindings(manifest);
+  assert.ok(failures.some((failure) => /treatment/.test(failure)), failures.join("\n"));
 });
 
 test("a private scene cannot be declared as a generated visual reference", () => {

@@ -108,6 +108,7 @@ export function visualCandidateIdentity(manifest, item) {
         maskSha256: item.maskSha256,
         alphaPngSha256: item.alphaPngSha256,
         reviewedRenderSha256: item.paperRenderSha256 ?? item.alphaPngSha256,
+        paperTreatmentSha256: item.paperTreatmentSha256,
         pipelineVersion: manifest.pipelineVersion,
       }
     : {
@@ -148,6 +149,12 @@ export function checkVisualRunBindings(manifest) {
     }
     if (item.assetType === "direct-pixel-cutout") {
       const renderHash = item.paperRenderSha256 ?? item.alphaPngSha256;
+      const treatmentHash = createHash("sha256")
+        .update(stableJson(item.paperTreatment ?? null))
+        .digest("hex");
+      if (item.paperTreatmentSha256 !== treatmentHash) {
+        failures.push(`${item.id}: paper treatment hash does not match its regenerable parameters`);
+      }
       if (item.reviewedCanonicalAlphaSha256 !== item.alphaPngSha256) {
         failures.push(`${item.id}: reviewed alpha hash does not match the canonical alpha`);
       }

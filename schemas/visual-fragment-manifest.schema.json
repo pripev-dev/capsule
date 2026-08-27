@@ -180,7 +180,8 @@
                 "candidateIdentitySha256",
                 "selectionOrigin",
                 "reviewedCanonicalAlphaSha256",
-                "reviewedRenderSha256"
+                "reviewedRenderSha256",
+                "paperTreatmentSha256"
               ]
             }
           }
@@ -312,6 +313,10 @@
         },
         "reviewedRenderSha256": {
           "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "paperTreatmentSha256": {
+          "$ref": "common.schema.json#/$defs/sha256",
+          "description": "Hash of the complete regenerable treatment parameters. A metadata-only treatment change invalidates review even if stale render pixels were accidentally retained."
         },
         "assetType": {
           "const": "direct-pixel-cutout"
@@ -567,7 +572,10 @@
                 "deckle",
                 "taped",
                 "pinned",
-                "none"
+                "none",
+                "cream-sticker-border",
+                "unifying-paper-substrate",
+                "contained-paper-border"
               ]
             },
             "seed": {
@@ -575,6 +583,31 @@
               "minimum": 0
             },
             "borderRetentionPx": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "borderPx": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "substratePx": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "componentsUnified": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "creamHex": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
+            },
+            "shadowOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "insetPx": {
               "type": "integer",
               "minimum": 0
             },
