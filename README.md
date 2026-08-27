@@ -6,9 +6,28 @@
 engine, and a minimal offline viewer. Everything needed to open a
 preserved family recipe with no database, no account, and no company.
 
-> **Status: Phase A of six. Nothing here runs yet.** Every capability described
-> below is an acceptance target. When it passes, this README gets rewritten with
-> measurements. Until then, no sentence in it belongs on a CV.
+> **Status: Phase A contract implemented.** The schemas, validators, reference
+> fixture and cross-manifest checks run in 29 tests. The deterministic
+> composition engine and offline viewer remain later work.
+
+## Visual fragment contract
+
+All new visual writers emit manifest schema V2. A V2 direct fragment binds its
+immutable visual run, source, semantic target, extraction and output modes,
+mask, canonical alpha, reviewed paper render and treatment parameters into one
+candidate identity. A review records the same hashes, so changing any reviewed
+pixel or treatment invalidates approval.
+
+Direct pixel cutouts and generated source-derived stickers remain separate
+asset types, directories and provenance shapes. Generated items must record
+their reference policy and similarity screening; people, pets and private homes
+cannot be declared as generation references. V1 manifests remain readable for
+historical capsules but cannot satisfy V2 review.
+
+```powershell
+npm install
+npm test
+```
 
 ---
 

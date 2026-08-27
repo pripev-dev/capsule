@@ -6,8 +6,10 @@
 
 ## Project overview
 
-**Status: Phase A. Scaffolding only – no implementation.** Nothing in this
-repository may be described as working until its test is green.
+**Status: Phase A contract implemented.** The schema set, validators, reference
+fixture and visual-fragment manifest V2 pass 29 tests. The composition engine
+and offline viewer remain later work. Nothing in this repository may be
+described as working until its test is green.
 
 Two things depend on this repository and neither may own it: the cookbook
 agent writes `capsule.json`, and the application renders it. The schema is
