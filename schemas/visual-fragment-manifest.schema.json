@@ -435,9 +435,11 @@
           "required": [
             "components",
             "coverage",
-            "rectangularity"
+            "holeShare",
+            "largestShare",
+            "edgeContact"
           ],
-          "description": "Measured, not judged. A matte that returned five disconnected specks or an alpha that is essentially its own bounding box is detectable without a human, and a person's review time should not be spent on it.",
+          "description": "Measured, not judged, and measuring the things a reviewer actually rejects for. Fitted to thirteen real decisions on 2026-08-27: the previous measurements agreed with the reviewer eight times in thirteen, these agree ten. A hole through the subject, a subject arriving in pieces, and a straight machine cut where a silhouette should be are all detectable without a human. A clean mask of the wrong thing is not, which is what `score` is for.",
           "properties": {
             "components": {
               "type": "integer",
@@ -446,12 +448,39 @@
             "coverage": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 1,
+              "description": "Share of the fragment's own frame that is opaque. Very high means nothing was separated."
             },
-            "rectangularity": {
+            "holeShare": {
               "type": "number",
               "minimum": 0,
-              "maximum": 1
+              "maximum": 1,
+              "description": "Share of the subject punched through with nothing. What a figure-ground model does when given no ground: it finds figure inside the subject."
+            },
+            "largestShare": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "The biggest connected piece as a share of the whole subject. Below one means the subject came back in pieces."
+            },
+            "edgeContact": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Share of the outline lying flat against the frame edge: a straight machine cut rather than a silhouette."
+            },
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "The segmenter's own confidence that this is the thing that was named. The only available warning for a mask that is geometrically perfect and of the wrong subject."
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Why the verdict is what it is, in words, so a reviewer is told rather than scored at."
             },
             "verdict": {
               "enum": [
