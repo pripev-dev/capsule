@@ -555,6 +555,35 @@
             "public-approved"
           ]
         },
+        "provenanceAttestation": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Present only when a person overruled the automatic provenance classification for the source image. The classifier reads filenames, so it calls anything named like a screenshot third-party and refuses it a single pixel - which is the safe direction to be wrong in, and wrong whenever someone screenshots their own work. Overruling it is a statement a named person stands behind, and it travels with the asset so a published capsule can always answer who said this was ours. It is a record, not something to render.",
+          "required": [
+            "declaredBy",
+            "declaredAt",
+            "basis"
+          ],
+          "properties": {
+            "originalProvenance": {
+              "type": ["string", "null"],
+              "description": "What the automatic classifier decided before it was overruled. Kept beside the declaration rather than replaced, the way the preservation manifest keeps originals."
+            },
+            "declaredBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "declaredAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "basis": {
+              "type": "string",
+              "minLength": 8,
+              "description": "Why this person says the classifier was wrong. A declaration without a reason is a flag flip, and this field is the difference."
+            }
+          }
+        },
         "paperTreatment": {
           "type": "object",
           "additionalProperties": false,

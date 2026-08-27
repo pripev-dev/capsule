@@ -126,6 +126,61 @@ test("a V2 fragment manifest binds every reviewed asset to an immutable visual r
   assert.deepEqual(checkVisualRunBindings(manifest), []);
 });
 
+test("an overruled provenance classification travels with the asset", () => {
+  // `ingest` decides what may be cut from a filename, so anything named like a
+  // screenshot is refused a single pixel - the safe direction to be wrong in,
+  // and wrong whenever someone screenshots their own work. Overruling it is a
+  // statement a named person stands behind, and it has to reach the capsule so
+  // a published page can always answer who said this was ours.
+  //
+  // The kitchen attached this field, `CONTRACT.md` documented it, and this
+  // schema did not declare it - which, with additionalProperties false, meant
+  // the first bundle written from real reclassified material was refused.
+  const manifest = v2Fragments();
+  manifest.items[0].provenanceAttestation = {
+    originalProvenance: "third-party-screenshot",
+    declaredBy: "Alexander Rudaev",
+    declaredAt: "2026-08-27T17:23:06.566Z",
+    basis: "his own screenshots of his own material, confirmed by him on 2026-08-27",
+  };
+  const result = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(result.valid, true, JSON.stringify(result.errors, null, 2));
+});
+
+test("a provenance declaration without a basis is not a declaration", () => {
+  const manifest = v2Fragments();
+  manifest.items[0].provenanceAttestation = {
+    originalProvenance: "third-party-screenshot",
+    declaredBy: "Alexander Rudaev",
+    declaredAt: "2026-08-27T17:23:06.566Z",
+  };
+  const missing = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(missing.valid, false, "an attestation with no stated basis was accepted");
+
+  // A basis has to say something. "ok" is a flag flip wearing a reason.
+  manifest.items[0].provenanceAttestation.basis = "ok";
+  const empty = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(empty.valid, false, "a basis too short to be a reason was accepted");
+});
+
+test("edge contact is a share, so it cannot exceed one", () => {
+  // Three approved cutouts arrived carrying 3118, 7910 and 6598 on 2026-08-28,
+  // because cv2.erode does not shrink a mask at the image border and the
+  // denominator collapsed to 1. The schema is what caught it.
+  const manifest = v2Fragments();
+  manifest.items[0].quality = {
+    components: 1,
+    coverage: 1,
+    holeShare: 0,
+    largestShare: 1,
+    edgeContact: 7910,
+    verdict: "good",
+    reasons: [],
+  };
+  const result = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(result.valid, false, "a pixel count was accepted where a share was required");
+});
+
 test("a V2 fragment cannot omit the reviewed artifact hashes", () => {
   const manifest = v2Fragments();
   delete manifest.items[0].reviewedRenderSha256;
