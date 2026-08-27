@@ -18,6 +18,8 @@ import {
   checkClosure,
   checkApprovedFragmentsOnly,
   checkEvidenceQuotes,
+  checkVisualRunBindings,
+  visualCandidateIdentity,
 } from "../src/validate/index.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -29,6 +31,52 @@ const load = (name) =>
 const capsule = () => load("capsule.json");
 const evidenceMap = () => load("evidence-map.json");
 const fragments = () => load("visual-fragments.json");
+
+function v2Fragments() {
+  const manifest = fragments();
+  manifest.schemaVersion = 2;
+  manifest.visualRunId = "vrun_01JQ8XZ4M7N2P5R8T0V3W6Y9AB";
+  manifest.pipelineVersion = "visual-v2.0.0";
+  manifest.selectionPolicyVersion = "direct-pack-v1";
+  manifest.sourceSetSha256 = "b".repeat(64);
+  manifest.contextSha256 = "c".repeat(64);
+  manifest.budget = {
+    currency: "USD",
+    cap: 0.25,
+    estimated: 0.19,
+    actual: 0.18,
+    stageCaps: { scout: 0.03, segment: 0.12, curate: 0.08, reserve: 0.02 },
+  };
+  manifest.modelReceipts = [
+    {
+      provider: "openai",
+      model: "gpt-5.6-luna",
+      purpose: "scout",
+      promptVersion: "capsule-scout-v1",
+      inputUnits: 1200,
+      outputUnits: 300,
+      currency: "USD",
+      amount: 0.001,
+    },
+  ];
+  manifest.items = manifest.items.map((item) => {
+    const bound = {
+      ...item,
+      visualRunId: manifest.visualRunId,
+      selectionOrigin: "automatic-recommended",
+      reviewedCanonicalAlphaSha256: item.alphaPngSha256,
+      reviewedRenderSha256: item.alphaPngSha256,
+    };
+    const identity = visualCandidateIdentity(manifest, bound);
+    return {
+      ...bound,
+      id: identity.candidateId,
+      candidateId: identity.candidateId,
+      candidateIdentitySha256: identity.sha256,
+    };
+  });
+  return manifest;
+}
 
 /** Mutate a clone, then report the failures it produces. */
 function broken(mutate, extras = {}) {
@@ -57,6 +105,111 @@ test("the sibling manifests validate", () => {
     const result = validate(schema, load(file));
     assert.equal(result.valid, true, JSON.stringify(result.errors, null, 2));
   }
+});
+
+test("a V2 fragment manifest binds every reviewed asset to an immutable visual run", () => {
+  const manifest = v2Fragments();
+  const result = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(result.valid, true, JSON.stringify(result.errors, null, 2));
+  assert.deepEqual(checkVisualRunBindings(manifest), []);
+});
+
+test("a V2 fragment cannot omit the reviewed artifact hashes", () => {
+  const manifest = v2Fragments();
+  delete manifest.items[0].reviewedRenderSha256;
+  const result = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(result.valid, false, "a decision detached from its reviewed render was accepted");
+});
+
+test("a V2 generated manifest records safe references and a similarity result", () => {
+  const manifest = {
+    schemaVersion: 2,
+    assetType: "generated-source-derived-sticker",
+    status: "approved",
+    capsuleId: "cap_01JQ8XZ4M7N2P5R8T0V3W6Y9AB",
+    generatedAt: "2026-08-27T10:40:00Z",
+    visualRunId: "vrun_01JQ8XZ4M7N2P5R8T0V3W6Y9AB",
+    pipelineVersion: "visual-v2.0.0",
+    selectionPolicyVersion: "generated-pack-v1",
+    sourceSetSha256: "d".repeat(64),
+    contextSha256: "e".repeat(64),
+    budget: {
+      currency: "USD",
+      cap: 1,
+      estimated: 0.5,
+      actual: 0.5,
+      stageCaps: { scout: 0, segment: 0.04, curate: 0, reserve: 0.02 },
+    },
+    modelReceipts: [],
+    items: [
+      {
+        id: "gen_placeholder",
+        assetType: "generated-source-derived-sticker",
+        sourceImageIds: ["art_family_plate"],
+        prompt: "Four source-derived floral accents on a removable field",
+        promptVersion: "generated-accents-v1",
+        model: "gpt-image-2",
+        modelSnapshotWhenAvailable: "gpt-image-2-2026-04-21",
+        generatedAt: "2026-08-27T10:40:00Z",
+        outputPath: "visuals/generated-derivatives/gen_tile_flower.png",
+        outputSha256: "f".repeat(64),
+        usageReceipt: {
+          units: "images",
+          inputUnits: 1,
+          outputUnits: 1,
+          currency: "USD",
+          amount: 0.5,
+        },
+        derivationLabel: "generated-source-derived — not a piece of the original",
+        reviewDecision: "approved",
+        publicUseApproved: false,
+        visualRunId: "vrun_01JQ8XZ4M7N2P5R8T0V3W6Y9AB",
+        candidateId: "gen_placeholder",
+        candidateIdentitySha256: "1".repeat(64),
+        selectionOrigin: "automatic-recommended",
+        reviewedOutputSha256: "f".repeat(64),
+        referenceProvenance: [
+          {
+            imageId: "art_tile_reference",
+            sha256: "2".repeat(64),
+            kind: "tile",
+            containsPrivateScene: false,
+            confirmedByPersonId: "per_creator",
+            confirmedAt: "2026-08-27T10:39:00Z",
+          },
+        ],
+        similarityCheck: { passed: true, maxSimilarity: 0.21, reasons: [] },
+      },
+    ],
+  };
+  const identity = visualCandidateIdentity(manifest, manifest.items[0]);
+  manifest.items[0].id = identity.candidateId;
+  manifest.items[0].candidateId = identity.candidateId;
+  manifest.items[0].candidateIdentitySha256 = identity.sha256;
+  const result = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(result.valid, true, JSON.stringify(result.errors, null, 2));
+  assert.deepEqual(checkVisualRunBindings(manifest), []);
+});
+
+test("changing a reviewed pixel hash invalidates a V2 candidate", () => {
+  const manifest = v2Fragments();
+  manifest.items[0].alphaPngSha256 = "7".repeat(64);
+  assert.ok(checkVisualRunBindings(manifest).some((failure) => /identity|reviewed alpha/.test(failure)));
+});
+
+test("a private scene cannot be declared as a generated visual reference", () => {
+  const manifest = {
+    ...v2Fragments(),
+    assetType: "generated-source-derived-sticker",
+    items: [],
+  };
+  // The generated-item fixture above proves the positive shape; the schema's
+  // `false` constant is what makes this policy non-negotiable.
+  const schema = JSON.parse(readFileSync(path.resolve(FIXTURES, "../../schemas/visual-fragment-manifest.schema.json"), "utf8"));
+  assert.equal(
+    schema.$defs.generatedSticker.properties.referenceProvenance.items.properties.containsPrivateScene.const,
+    false,
+  );
 });
 
 test("a factual block cannot exist without evidence", () => {
@@ -222,7 +375,14 @@ test("the treated render lives with the approved cutouts, not loose", () => {
 
 test("fragment quality is measured, and its verdict is a closed set", () => {
   const manifest = fragments();
-  manifest.items[0].quality = { components: 5, coverage: 0.004, rectangularity: 0.2, verdict: "unusable" };
+  manifest.items[0].quality = {
+    components: 5,
+    coverage: 0.004,
+    holeShare: 0,
+    largestShare: 0.6,
+    edgeContact: 0,
+    verdict: "unusable",
+  };
   assert.equal(validate("visual-fragment-manifest.schema.json", manifest).valid, true);
 
   manifest.items[0].quality.verdict = "probably fine";
