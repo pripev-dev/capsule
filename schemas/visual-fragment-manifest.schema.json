@@ -964,7 +964,7 @@
           }
         },
         "derivationLabel": {
-          "const": "generated-source-derived — not a piece of the original",
+          "const": "generated-source-derived – not a piece of the original",
           "description": "Pinned so a generated interpretation can never be relabelled as an extracted fragment."
         },
         "reviewDecision": {
