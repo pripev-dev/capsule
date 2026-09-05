@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 2,
+  "capsuleId": "cap_01SYNTHETICGOLDEN00000000",
+  "title": "The",
+  "locale": "und",
+  "sourceRecordings": [
+    {
+      "recordingId": "rec_synthetic",
+      "recordingKey": "synthetic",
+      "durationSeconds": 96
+    }
+  ],
+  "blocks": [
+    {
+      "blockId": "blk_synthetic_001",
+      "type": "title",
+      "text": "The",
+      "evidence": [
+        "ev_synthetic_14_17"
+      ],
+      "origin": "transcript"
+    },
+    {
+      "blockId": "blk_synthetic_002",
+      "type": "media",
+      "mediaRole": "primary-voice",
+      "recordingId": "rec_synthetic",
+      "origin": "system",
+      "recordingKey": "synthetic",
+      "durationSeconds": 96,
+      "audioSrc": null,
+      "headingText": "Her voice",
+      "transcriptLabel": "Transcript",
+      "downloadLabel": "download the recording",
+      "chaptersLabel": "By part",
+      "transcriptText": "Oat biscuits, the ones I make when there is nothing else in the house. You want two cups of rolled oats, a hundred grams of butter, and half a cup of soft brown sugar. Melt the butter first, slowly, do not let it colour. Pour it over the oats and the sugar and stir until every oat is wet. I always press it down hard into the tin, hard, because a loose one falls apart when you cut it. Bake it at a hundred and eighty until the edges go dark gold, about twenty five minutes. Let it cool completely in the tin before you cut it, that is the part everyone gets wrong. My mother used to make these on a Sunday and the whole house smelled of them by the afternoon. It keeps a week in a tin, if it lasts that long.",
+      "waveformPeaks": null,
+      "transcriptSpan": {
+        "start": 0,
+        "end": 710
+      },
+      "chapters": [],
+      "controls": {
+        "native": true,
+        "rate": true,
+        "volume": true,
+        "download": true,
+        "rateOptions": [
+          0.75,
+          1,
+          1.25,
+          1.5
+        ],
+        "note": "Native controls. A custom transport that loses keyboard access or the download is a regression, not a design."
+      },
+      "transcript": {
+        "attachedToPlayer": true,
+        "expandedByDefault": false,
+        "pageCarriesTranscript": true,
+        "note": "The page under this player is the transcript, block by block, so the panel starts closed and opens to give the unbroken text."
+      },
+      "placement": {
+        "after": "opening-banner",
+        "before": "first-section",
+        "movable": true
+      }
+    },
+    {
+      "blockId": "blk_synthetic_003",
+      "type": "ordered-list",
+      "listKind": "ordered-steps",
+      "marker": "number",
+      "evidence": [
+        "ev_synthetic_0_710"
+      ],
+      "origin": "transcript",
+      "sectionIndex": 0,
+      "itemCount": 9,
+      "children": [
+        {
+          "blockId": "blk_synthetic_004",
+          "type": "ordered-item",
+          "text": "Oat biscuits, the ones I make when there is nothing else in the house.",
+          "evidence": [
+            "ev_synthetic_0_70"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 0,
+            "end": 70
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 1
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_005",
+          "type": "ordered-item",
+          "text": "You want two cups of rolled oats, a hundred grams of butter, and half a cup of soft brown sugar.",
+          "evidence": [
+            "ev_synthetic_71_167"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 71,
+            "end": 167
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 2
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_006",
+          "type": "ordered-item",
+          "text": "Melt the butter first, slowly, do not let it colour.",
+          "evidence": [
+            "ev_synthetic_168_220"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 168,
+            "end": 220
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 3
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_007",
+          "type": "ordered-item",
+          "text": "Pour it over the oats and the sugar and stir until every oat is wet.",
+          "evidence": [
+            "ev_synthetic_221_289"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 221,
+            "end": 289
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 4
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_008",
+          "type": "ordered-item",
+          "text": "I always press it down hard into the tin, hard, because a loose one falls apart when you cut it.",
+          "evidence": [
+            "ev_synthetic_290_386"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 290,
+            "end": 386
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 5
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_009",
+          "type": "ordered-item",
+          "text": "Bake it at a hundred and eighty until the edges go dark gold, about twenty five minutes.",
+          "evidence": [
+            "ev_synthetic_387_475"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 387,
+            "end": 475
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 6
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_010",
+          "type": "ordered-item",
+          "text": "Let it cool completely in the tin before you cut it, that is the part everyone gets wrong.",
+          "evidence": [
+            "ev_synthetic_476_566"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 476,
+            "end": 566
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 7
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_011",
+          "type": "ordered-item",
+          "text": "My mother used to make these on a Sunday and the whole house smelled of them by the afternoon.",
+          "evidence": [
+            "ev_synthetic_567_661"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 567,
+            "end": 661
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 8
+          },
+          "fromEnumeration": false
+        },
+        {
+          "blockId": "blk_synthetic_012",
+          "type": "ordered-item",
+          "text": "It keeps a week in a tin, if it lasts that long.",
+          "evidence": [
+            "ev_synthetic_662_710"
+          ],
+          "origin": "transcript",
+          "sourceSpan": {
+            "start": 662,
+            "end": 710
+          },
+          "sectionIndex": 0,
+          "marker": {
+            "kind": "number",
+            "index": 9
+          },
+          "fromEnumeration": false
+        }
+      ]
+    }
+  ],
+  "claims": [],
+  "clarifications": [],
+  "fonts": [
+    {
+      "fontId": "fnt_literata",
+      "family": "Literata",
+      "version": "gf-2026-08",
+      "licenceId": "OFL-1.1",
+      "licenceUrl": "https://openfontlicense.org",
+      "redistributable": true,
+      "scriptsCovered": [
+        "Latin",
+        "Cyrillic",
+        "Greek"
+      ],
+      "isSystemFont": false
+    },
+    {
+      "fontId": "fnt_alegreya",
+      "family": "Alegreya",
+      "version": "gf-2026-08",
+      "licenceId": "OFL-1.1",
+      "licenceUrl": "https://openfontlicense.org",
+      "redistributable": true,
+      "scriptsCovered": [
+        "Latin",
+        "Cyrillic",
+        "Greek"
+      ],
+      "isSystemFont": false
+    },
+    {
+      "fontId": "fnt_caveat",
+      "family": "Caveat",
+      "version": "gf-2026-08",
+      "licenceId": "OFL-1.1",
+      "licenceUrl": "https://openfontlicense.org",
+      "redistributable": true,
+      "scriptsCovered": [
+        "Latin",
+        "Cyrillic"
+      ],
+      "isSystemFont": false
+    },
+    {
+      "fontId": "fnt_pt_sans",
+      "family": "PT Sans",
+      "version": "gf-2026-08",
+      "licenceId": "OFL-1.1",
+      "licenceUrl": "https://openfontlicense.org",
+      "redistributable": true,
+      "scriptsCovered": [
+        "Latin",
+        "Cyrillic"
+      ],
+      "isSystemFont": false
+    }
+  ],
+  "compositions": [
+    {
+      "compositionId": "comp_727688e7",
+      "surfaceClass": "any",
+      "intent": {
+        "tokens": {
+          "typeStack": [
+            {
+              "role": "display",
+              "fontId": "fnt_literata"
+            },
+            {
+              "role": "text",
+              "fontId": "fnt_alegreya"
+            },
+            {
+              "role": "accent",
+              "fontId": "fnt_caveat"
+            },
+            {
+              "role": "caption",
+              "fontId": "fnt_pt_sans"
+            }
+          ],
+          "palette": {
+            "paperTint": "#ebebeb",
+            "ink": "#171717",
+            "accents": [
+              "#171717"
+            ],
+            "sampledFromFragmentIds": []
+          },
+          "rhythm": {
+            "measureRange": [
+              37,
+              65
+            ],
+            "leadingScale": 1.5,
+            "sectionSpacing": "generous"
+          }
+        },
+        "compositionId": "comp_727688e7",
+        "scatterSeed": "cap_01SYNTHETICGOLDEN00000000/synthetic",
+        "clusters": [],
+        "freeFragments": [],
+        "bannerMode": "typographic",
+        "placedInThisCookbook": [],
+        "reasons": {
+          "banner": "No fragment reaches this page. The banner is her title on two torn sheets, set to its own measure, which is a composition and not a placeholder.",
+          "density": "density 0 from 0 available piece(s)",
+          "scatter": "no scatter: nothing is left over from the banner",
+          "ledger": "This page places no photograph, so it spends nothing from the cookbook."
+        }
+      }
+    }
+  ],
+  "legend": [
+    {
+      "type": "numbered",
+      "means": "a step in an order she gave"
+    }
+  ],
+  "provenance": {
+    "jobId": "job_synthetic_golden",
+    "composedAt": "2026-09-05T00:00:00.000Z",
+    "fragmentsUsed": []
+  }
+}
