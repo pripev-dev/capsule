@@ -57,11 +57,20 @@ jobs:
             echo "::error::An audio file is tracked in a repository that goes public."
             exit 1
           fi
-          # This file is excluded from its own scan: the pattern below contains
-          # a run of Cyrillic characters, so the guard matched itself and would
-          # have failed every build the moment it first ran.
-          if git grep -lI --cached -E '[а-яА-ЯёЁ]{6,}' -- . ':!*.md' ':!.github/workflows/ci.yml' > /dev/null 2>&1; then
+          # Two bugs were fixed here on 2026-09-05, both of which made this check
+          # a worse rule than it reads as.
+          #
+          #   The pattern used to be written with literal Cyrillic, so the guard
+          #   matched its own source and would have failed every build the moment
+          #   it first ran. Escapes fix that, and the file no longer has to
+          #   exempt itself.
+          #
+          #   `git grep -E` applies {6,} to BYTES, and Cyrillic costs two bytes a
+          #   character in UTF-8, so "six or more letters" actually meant three
+          #   or more - it flagged every ordinary word. -P counts characters, so
+          #   the rule now means what it says.
+          if git grep -lIP --cached '[\x{0400}-\x{04FF}]{6,}' -- . ':!*.md' > /dev/null 2>&1; then
             echo "::error::Cyrillic source material found outside documentation."
-            git grep -lI --cached -E '[а-яА-ЯёЁ]{6,}' -- . ':!*.md' ':!.github/workflows/ci.yml'
+            git grep -lIP --cached '[\x{0400}-\x{04FF}]{6,}' -- . ':!*.md'
             exit 1
           fi

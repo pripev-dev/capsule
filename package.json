@@ -11,7 +11,8 @@
   "exports": {
     "./validate": "./src/validate/index.mjs",
     "./engine/*": "./src/engine/*.mjs",
-    "./schemas/*": "./schemas/*"
+    "./schemas/*": "./schemas/*",
+    "./fixtures/*": "./fixtures/*"
   },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\""

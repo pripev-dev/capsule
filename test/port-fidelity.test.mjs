@@ -144,6 +144,17 @@ function withFileFetch(base, fn) {
 
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 
+/**
+ * How the prototype's harness wrote a capsule to disk.
+ *
+ * Verified against the archived files rather than assumed: they are exactly
+ * `JSON.stringify(value, null, 2)` in UTF-8, with **no trailing newline**. That
+ * is what makes the comparisons below literal byte comparisons of the produced
+ * serialisation against the file, rather than deep-equality with the formatting
+ * quietly thrown away.
+ */
+const serialise = (value) => Buffer.from(JSON.stringify(value, null, 2), "utf8");
+
 /** The prototype composed every run at this instant; reproducing it needs the same one. */
 const NOW = "2026-09-01T00:00:00.000Z";
 
@@ -173,17 +184,21 @@ async function replay(runDir) {
 // --- the four runs -----------------------------------------------------------
 
 for (const run of RUNS) {
-  test(`${run.dir} replays byte-identically`, SKIP, async () => {
+  test(`${run.dir} replays byte for byte`, SKIP, async () => {
     const result = await replay(run.dir);
     assert.equal(result.capsules.length, run.pages.length,
       `${run.dir} composed ${result.capsules.length} page(s), expected ${run.pages.length}`);
 
     run.pages.forEach((file, index) => {
-      const expected = readJson(path.join(EXPORT, run.dir, "work", file));
-      const got = result.capsules[index].capsule;
-      // Byte-identical. A port has no licence to move a character.
-      assert.equal(JSON.stringify(got), JSON.stringify(expected),
-        `${run.dir}/${file} differs`);
+      const expectedBytes = readFileSync(path.join(EXPORT, run.dir, "work", file));
+      const gotBytes = serialise(result.capsules[index].capsule);
+      // Literally byte for byte: the produced serialisation against the bytes on
+      // disk, indentation and final-newline policy included. A port has no
+      // licence to move a character, and a deep-equality check would let it move
+      // every space in the file.
+      assert.equal(gotBytes.length, expectedBytes.length,
+        `${run.dir}/${file}: ${gotBytes.length} bytes produced, ${expectedBytes.length} expected`);
+      assert.ok(gotBytes.equals(expectedBytes), `${run.dir}/${file} differs`);
     });
   });
 }
@@ -251,10 +266,13 @@ async function replayColdStart(entry) {
 }
 
 for (const entry of COLD) {
-  test(`cold start ${entry.dir} replays byte-identically`, SKIP, async () => {
+  test(`cold start ${entry.dir} replays byte for byte`, SKIP, async () => {
     const { result, dir } = await replayColdStart(entry);
-    const expected = readJson(path.join(dir, "capsule.json"));
-    assert.equal(JSON.stringify(result.capsules[0].capsule), JSON.stringify(expected));
+    const expectedBytes = readFileSync(path.join(dir, "capsule.json"));
+    const gotBytes = serialise(result.capsules[0].capsule);
+    assert.equal(gotBytes.length, expectedBytes.length,
+      `${entry.dir}: ${gotBytes.length} bytes produced, ${expectedBytes.length} expected`);
+    assert.ok(gotBytes.equals(expectedBytes), `${entry.dir} differs`);
   });
 }
 
@@ -262,8 +280,8 @@ test("the cold starts still decide language the way they were recorded", SKIP, a
   const ru = await replayColdStart(COLD[0]);
   const pt = await replayColdStart(COLD[1]);
   for (const { pack, dir } of [ru, pt]) {
-    const expected = readJson(path.join(dir, "language-pack.json"));
-    assert.equal(JSON.stringify(pack), JSON.stringify(expected), `${dir} chose a different pack`);
+    const expectedBytes = readFileSync(path.join(dir, "language-pack.json"));
+    assert.ok(serialise(pack).equals(expectedBytes), `${dir} chose a different pack`);
   }
   // The point of the second one: a declared locale with no pack behind it must
   // come back unpublishable rather than quietly borrowing another language's

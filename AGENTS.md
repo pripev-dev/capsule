@@ -8,9 +8,10 @@
 
 **Status: Phase A contract implemented, and the deterministic composition engine
 is here.** The schema set, validators, reference fixture, visual-fragment
-manifest V2 and the ported engine pass **78 tests**. The offline viewer remains
-later work; so does the renderer, which is deliberately still in the Stage 1
-export rather than in this repository. Nothing here may be described as working
+manifest V2 and the ported engine pass **81 tests** - 71 of them on a clean
+public clone, where the other 10 skip because they replay the private Design
+export. The offline viewer remains later work; so does the renderer, which is
+deliberately still in the Stage 1 export rather than in this repository. Nothing here may be described as working
 until its test is green.
 
 The engine arrived on 2026-09-05 from the Claude Design prototype, converted

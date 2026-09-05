@@ -8,8 +8,9 @@ preserved family recipe with no database, no account, and no company.
 
 > **Status: Phase A contract implemented, and the deterministic composition
 > engine is here.** The schemas, validators, reference fixture, cross-manifest
-> checks and the ported engine run in **78 tests**, 69 of which need nothing but
-> a clean public clone. The offline viewer and the renderer remain later work.
+> checks and the ported engine run in **81 tests**. On a clean public clone 71
+> pass and 10 skip - those 10 replay the private Design export and say so rather
+> than failing. The offline viewer and the renderer remain later work.
 
 ## Visual fragment contract
 
