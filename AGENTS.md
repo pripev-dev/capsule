@@ -6,10 +6,31 @@
 
 ## Project overview
 
-**Status: Phase A contract implemented.** The schema set, validators, reference
-fixture and visual-fragment manifest V2 pass 29 tests. The composition engine
-and offline viewer remain later work. Nothing in this repository may be
-described as working until its test is green.
+**Status: Phase A contract implemented, and the deterministic composition engine
+is here.** The schema set, validators, reference fixture, visual-fragment
+manifest V2 and the ported engine pass **78 tests**. The offline viewer remains
+later work; so does the renderer, which is deliberately still in the Stage 1
+export rather than in this repository. Nothing here may be described as working
+until its test is green.
+
+The engine arrived on 2026-09-05 from the Claude Design prototype, converted
+CommonJS/browser-global IIFE to ESM with every body copied and checked byte for
+byte. What proves it is not review but output: the four archived runs and both
+cold starts replay through it byte-identically, and a committed synthetic golden
+does the same for six surfaces on a clean public clone.
+
+**Two files in this repository are called validate, and both names are right.**
+`src/engine/validate.mjs` holds the deterministic *layout* refusals - contrast,
+legibility, collisions, overflow, undeclared print surfaces, pagination. It
+answers with a code, a subject and a sentence, because
+`repairing-a-failed-validation` cannot repair a boolean. `src/validate/index.mjs`
+is the capsule *contract* validator: JSON Schema plus the cross-field checks.
+Neither imports the other.
+
+**`pretext(surface)` in `src/engine/layout.mjs` is not `@chenglou/pretext`.** It
+is a local function that became the single source of every measurement on a
+surface. The name collides with a documented dependency this project does not
+have and has never installed; that dependency is still prose in the handbook.
 
 Two things depend on this repository and neither may own it: the cookbook
 agent writes `capsule.json`, and the application renders it. The schema is
