@@ -13,10 +13,11 @@
  *   PRIPEV_DESIGN_EXPORT=/path/to/design    explicit
  *   ../../.port-staging/design              the umbrella fallback
  *
- * The skills come from the same export, because they have not been ported yet;
- * `compose.mjs` takes them injected, which is exactly what that seam is for.
- * Once `cookbook-agent` ships them as ESM this file loads those instead, and the
- * expectation does not move.
+ * The skills are injected through the seam `compose.mjs` opens. It prefers the
+ * ported ESM modules in `cookbook-agent/skills/` and falls back to the archived
+ * CommonJS ones, and the expectation is the same either way - which is the point
+ * of measuring against captured bytes rather than against code. Each run says
+ * which set it used, so a green result is never ambiguous.
  *
  * The expectations are the prototype's own `work/capsule.json`, captured in
  * Stage 1 while it still ran. If a comparison fails, the port is wrong.
@@ -80,10 +81,36 @@ const SKILL_PATHS = {
   repair: "repairing-a-failed-validation/repair.js",
 };
 
-function loadSkills() {
+/**
+ * Where the ported ESM skills are, or null.
+ *
+ * Once `cookbook-agent` carries them, the replay runs against those - which is
+ * the point: the expectation is captured bytes, so the same target holds whether
+ * the skills are the prototype's or the port's. Until then the archived
+ * CommonJS modules stand in.
+ */
+function findSkills() {
+  const candidates = [
+    process.env.PRIPEV_SKILLS,
+    path.resolve(HERE, "../../cookbook-agent/skills"),
+  ].filter(Boolean);
+  for (const dir of candidates) {
+    if (existsSync(path.join(dir, "assembling-the-sandbox", "assemble.mjs"))) return dir;
+  }
+  return null;
+}
+
+const ESM_SKILLS = EXPORT ? findSkills() : null;
+
+async function loadSkills() {
   const skills = {};
   for (const [key, rel] of Object.entries(SKILL_PATHS)) {
-    skills[key] = require_(path.join(SANDBOX, "skills", rel));
+    if (ESM_SKILLS) {
+      const file = path.join(ESM_SKILLS, rel.replace(/\.js$/, ".mjs"));
+      skills[key] = await import(pathToFileURL(file).href);
+    } else {
+      skills[key] = require_(path.join(SANDBOX, "skills", rel));
+    }
   }
   assert.deepEqual([...compose.SKILL_KEYS].sort(), Object.keys(skills).sort(),
     "the skill keys compose.mjs declares and the modules loaded here disagree");
@@ -130,7 +157,7 @@ const RUNS = [
 ];
 
 async function replay(runDir) {
-  const skills = loadSkills();
+  const skills = await loadSkills();
   compose.useSkills(skills);
   const loadJob = require_(path.join(SANDBOX, "engine", "load-job.js"));
   const base = path.join(EXPORT, runDir);
@@ -161,6 +188,14 @@ for (const run of RUNS) {
   });
 }
 
+test("the replay says which skill modules it ran against", SKIP, () => {
+  // A green run must never be ambiguous about what it proved. Before the skills
+  // are ported this is the archived CommonJS set; after, it is the ESM port, and
+  // the captured expectation does not move either way.
+  console.log(`    skills: ${ESM_SKILLS ? `ported ESM at ${ESM_SKILLS}` : "archived CommonJS"}`);
+  assert.ok(ESM_SKILLS || SANDBOX);
+});
+
 test("the runs are replayed in the order the cookbook ledger requires", SKIP, () => {
   assert.equal(RUNS[0].dir, "01-sloyony-pirog");
   assert.equal(RUNS[1].dir, "02-botvinniki-beze");
@@ -174,7 +209,7 @@ const COLD = [
 ];
 
 async function replayColdStart(entry) {
-  const skills = loadSkills();
+  const skills = await loadSkills();
   compose.useSkills(skills);
   const dir = path.join(EXPORT, "cold-start", entry.dir);
   const invocation = readJson(path.join(dir, "invocation.json"));
