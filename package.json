@@ -8,6 +8,11 @@
   "engines": {
     "node": ">=22"
   },
+  "exports": {
+    "./validate": "./src/validate/index.mjs",
+    "./engine/*": "./src/engine/*.mjs",
+    "./schemas/*": "./schemas/*"
+  },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\""
   },
