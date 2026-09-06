@@ -58,6 +58,9 @@ export function runOnHistory(root, allowlistPath) {
     throw new Error("History privacy check requires a full clone (fetch-depth: 0)");
   }
   const allowlist = JSON.parse(readFileSync(allowlistPath, "utf8"));
+  for (const [rule, paths] of Object.entries(allowlist.$history ?? {})) {
+    allowlist[rule] = [...new Set([...(allowlist[rule] ?? []), ...paths])];
+  }
   const commits = git("rev-list", "--all").toString().trim().split(/\r?\n/).filter(Boolean);
   const pairs = new Map();
   for (const commit of commits) {

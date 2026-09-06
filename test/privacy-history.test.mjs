@@ -21,6 +21,11 @@ test("history catches a removed unreviewed blob even when the checkout passes", 
   const list = path.join(dir, "privacy-allowlist.json");
   assert.equal(runOnCheckout(dir, list).findings.length, 0);
   assert.ok(runOnHistory(dir, list).findings.some((f) => f.file === "removed.wav"));
+  writeFileSync(list, JSON.stringify({ $history: { "media-audio": ["removed.wav"] },
+    $sha256: { "removed.wav": [createHash("sha256")
+      .update("synthetic test bytes, not real audio").digest("hex")] } }));
+  assert.equal(runOnCheckout(dir, list).stale.length, 0);
+  assert.equal(runOnHistory(dir, list).findings.length, 0);
 });
 test("an exact-path exemption does not authorize changed content", async () => {
   const { checkPrivacy } = await import("../src/privacy/check.mjs");
