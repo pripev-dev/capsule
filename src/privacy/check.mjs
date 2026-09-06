@@ -8,6 +8,7 @@
  * public repository in order to find out.
  */
 import { RULES, RULE_IDS } from "./rules.mjs";
+import { createHash } from "node:crypto";
 
 /**
  * An allowlist exempts one exact path from one named rule.
@@ -57,6 +58,11 @@ export function checkPrivacy({ files, read, allowlist = {} }) {
 
   const exempt = (ruleId, file) => {
     if (!allow.get(ruleId)?.has(file)) return false;
+    const reviewed = allowlist.$sha256?.[file];
+    if (reviewed) {
+      const bytes = read(file);
+      if (!bytes || !reviewed.includes(createHash("sha256").update(bytes).digest("hex"))) return false;
+    }
     used.add(`${ruleId}\u0000${file}`);
     return true;
   };

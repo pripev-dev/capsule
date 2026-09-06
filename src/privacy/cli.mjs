@@ -51,6 +51,42 @@ export function runOnCheckout(root, allowlistPath) {
   return { ...result, files };
 }
 
+/** Every path/blob pair reachable from local or fetched refs, not only HEAD. */
+export function runOnHistory(root, allowlistPath) {
+  const git = (...args) => execFileSync("git", ["-C", root, ...args], { maxBuffer: 128 * 1024 * 1024 });
+  if (git("rev-parse", "--is-shallow-repository").toString().trim() !== "false") {
+    throw new Error("History privacy check requires a full clone (fetch-depth: 0)");
+  }
+  const allowlist = JSON.parse(readFileSync(allowlistPath, "utf8"));
+  const commits = git("rev-list", "--all").toString().trim().split(/\r?\n/).filter(Boolean);
+  const pairs = new Map();
+  for (const commit of commits) {
+    for (const entry of git("ls-tree", "-rz", "--full-tree", commit).toString().split("\0").filter(Boolean)) {
+      const [meta, file] = entry.split("\t");
+      const [, type, oid] = meta.split(" ");
+      if (type === "blob") pairs.set(`${file}\0${oid}`, { file, oid });
+    }
+  }
+  const findings = [], problems = new Set();
+  const cache = new Map();
+  for (const { file, oid } of pairs.values()) {
+    if (!cache.has(oid)) cache.set(oid, git("cat-file", "blob", oid));
+    const scoped = Object.fromEntries(Object.entries(allowlist).map(([key, value]) =>
+      [key, key.startsWith("$") ? value : value.filter((p) => p === file)]));
+    // Content-bearing exemptions MUST be hash-bound in history mode.
+    for (const [rule, paths] of Object.entries(scoped)) {
+      if (!rule.startsWith("$") && paths.length && !allowlist.$sha256?.[file]?.length) {
+        problems.add(`History exemption requires reviewed SHA-256: ${file}`);
+      }
+    }
+    const result = checkPrivacy({ files: [file], read: () => cache.get(oid), allowlist: scoped });
+    for (const f of result.findings) findings.push({ ...f, blob: oid });
+    for (const p of result.problems) problems.add(p);
+  }
+  return { findings, problems: [...problems], stale: [], checked: pairs.size,
+    commits: commits.length, files: [...new Set([...pairs.values()].map((p) => p.file))] };
+}
+
 function main(argv) {
   const arg = (name, fallback) => {
     const i = argv.indexOf(name);
@@ -59,7 +95,7 @@ function main(argv) {
   const root = path.resolve(arg("--root", process.cwd()));
   const allowlistPath = path.resolve(arg("--allowlist", path.join(root, "privacy-allowlist.json")));
 
-  const result = runOnCheckout(root, allowlistPath);
+  const result = argv.includes("--history") ? runOnHistory(root, allowlistPath) : runOnCheckout(root, allowlistPath);
   const failed = result.findings.length + result.stale.length + result.problems.length > 0;
 
   if (argv.includes("--json")) {
