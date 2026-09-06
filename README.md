@@ -3,23 +3,29 @@
 **The contract that lets a family rebuild their capsule without us.**
 
 `capsule.json` and its sibling manifests, the deterministic composition
-engine, and a minimal offline viewer. Everything needed to open a
+engine, and the planned minimal offline viewer. The intended reconstruction set opens a
 preserved family recipe with no database, no account, and no company.
 
 > **Status: Phase A contract implemented, and the deterministic composition
 > engine is here.** The schemas, validators, reference fixture, cross-manifest
-> checks, the ported engine and the privacy guard run in **119 tests**. On a
-> clean public clone 109 pass and 10 skip - those 10 replay the private Design
+> checks, the ported engine and the privacy guard have **124 tests**. On a
+> clean public clone 114 are runnable and 10 skip - those 10 replay the private Design
 > export and say so rather than failing. The offline viewer and the renderer
 > remain later work.
 >
 > This repository holds a page composition contract, not an assembler. The
 > composer's output is a *page*; turning one into a schema-valid durable
 > `capsule.json` - consent, preservation, access, migration, edition metadata -
-> is Gate 2's work and lives in `cookbook-agent`. `test/public-golden.test.mjs`
+> is implemented by Gate 2's assembler in `cookbook-agent`. `test/public-golden.test.mjs`
 > pins exactly how far short the page falls, on purpose.
 
 ## Visual fragment contract
+
+Block text must be backed by a contiguous slice of a cited evidence quote,
+with case and whitespace normalised. This includes nested and single-character
+text blocks. `checkBlockTextIsQuoted` is exported from `./validate` and included
+in `checkAll` when an evidence map is provided. It is a contract invariant,
+not an agent-private validator.
 
 All new visual writers emit manifest schema V2. A V2 direct fragment binds its
 immutable visual run, source, semantic target, extraction and output modes,
@@ -82,6 +88,14 @@ anyone reviewing them. An entry exempts one path from one rule, so allowlisting
 a synthetic recording as audio does not also stop it being scanned for
 credentials, and an entry that no longer matches anything is reported as stale
 so it gets deleted.
+
+`runOnHistory` from `./privacy/cli` additionally scans every reachable commit's
+path/blob pairs and refuses shallow clones. Its exemptions require reviewed
+`$sha256` values; `$history` holds exact paths that existed only historically.
+Cookbook Agent runs it before pushing and in CI. Hash-bound exceptions reject
+changed bytes even at the same path. A clean reachable-history check cannot
+purge GitHub caches, old clones, or unauthorised future prose that the shape
+rules do not recognise. Those limits remain explicit.
 
 Two Cyrillic literals live in this repository and are not family material:
 `'mwшщжю'` is a glyph-width bucket in `src/engine/textlayout.mjs`, and

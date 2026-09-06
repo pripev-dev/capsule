@@ -8,8 +8,8 @@
 
 **Status: Phase A contract implemented, and the deterministic composition engine
 is here.** The schema set, validators, reference fixture, visual-fragment
-manifest V2, the ported engine and the privacy guard pass **119 tests**. On a
-clean public clone 109 pass and 10 skip - those 10 replay the private Design
+manifest V2, the ported engine and the privacy guard have **124 tests**. On a
+clean public clone 114 are runnable and 10 skip - those 10 replay the private Design
 export and say so rather than failing. Several more skip anywhere git is
 unavailable, because they ask git how it classifies or enumerates the tracked
 files. The offline viewer remains later work; so does
@@ -40,7 +40,7 @@ Two things depend on this repository and neither may own it: the cookbook
 agent writes `capsule.json`, and the application renders it. The schema is
 therefore the seam, and it is versioned, migrated and tested on its own.
 
-It is private today and **goes public before launch**. The promise in the
+It is **public**, as required before launch. The promise in the
 proposal - that a family can reconstruct their capsule without us - is only
 checkable if the schema and the viewer are readable by anyone.
 
