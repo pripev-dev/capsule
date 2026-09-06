@@ -1,0 +1,524 @@
+{
+  "$comment": "The composer's own record for the synthetic input, from the archived prototype.",
+  "languagePack": {
+    "detected": {
+      "locale": "en",
+      "script": "Latin",
+      "scripts": [
+        "Latin"
+      ],
+      "how": "declared",
+      "packExists": true,
+      "because": "The material declared its language as \"en\". A declaration from the people who made the recording outranks any guess this skill could make, including a confident one."
+    },
+    "locale": "en",
+    "packLocale": "en",
+    "complete": false,
+    "resolved": {
+      "lexicon": {
+        "path": "skills/structuring-spoken-recipes/lexicon.default.json",
+        "locale": null,
+        "substituted": true
+      },
+      "gloss": null,
+      "questionTemplates": {
+        "path": "skills/requesting-clarifications/question-templates.en.json",
+        "locale": "en",
+        "substituted": false
+      },
+      "chrome": {
+        "path": "skills/producing-locale-editions/chrome.en.json",
+        "locale": "en",
+        "substituted": false
+      }
+    },
+    "degrade": [
+      {
+        "capability": "lexicon",
+        "resolvedWith": "skills/structuring-spoken-recipes/lexicon.default.json",
+        "lost": "sentence roles, hedge reading, units and numerals, pivot and derivation cues, and section naming",
+        "consequence": "The page still splits on lexical cohesion and still marks digits and repetition. Sections go unnamed rather than named from a form nobody checked, no hedge is read so no gap comes from her own uncertainty, and no measure is recognised beyond a bare numeral.",
+        "reachesTheFamily": false
+      },
+      {
+        "capability": "gloss",
+        "resolvedWith": null,
+        "lost": "matching a fragment label to the page whose words it belongs to",
+        "consequence": "No label word can be scored, so every photograph is placed by visual weight and page appetite. The record says so instead of printing a table of zeroes.",
+        "reachesTheFamily": false
+      }
+    ],
+    "reasons": [
+      {
+        "capability": "lexicon",
+        "because": "no lexicon for en, so skills/structuring-spoken-recipes/lexicon.default.json stands in"
+      },
+      {
+        "capability": "gloss",
+        "because": "no gloss for en and nothing may stand in for it"
+      },
+      {
+        "capability": "questionTemplates",
+        "because": "the en pack ships it"
+      },
+      {
+        "capability": "chrome",
+        "because": "the en pack ships it"
+      }
+    ],
+    "summary": "The en pack is partial: lexicon, gloss are missing.",
+    "publishable": true,
+    "publishNote": "Nothing the family reads is in a language other than their own."
+  },
+  "readiness": {
+    "register": "voice-only",
+    "counts": {
+      "sentences": 9,
+      "words": 145,
+      "seconds": 96,
+      "fragments": 0,
+      "palettes": 0
+    },
+    "budget": {
+      "banner": "typographic",
+      "bannerMembers": 0,
+      "bannerKindFloor": 4,
+      "bannerRule": "A heap needs at least four different cutouts where four exist. When the cookbook spend cap bites, the banner is served first and the body scatter takes what is left - the opening is where repetition shows.",
+      "scatterCapacity": 0,
+      "allowSectioning": true,
+      "colourSource": "none-achromatic",
+      "cookbookSpendCap": null
+    },
+    "languagePack": {
+      "locale": "en",
+      "how": "declared",
+      "complete": false,
+      "summary": "The en pack is partial: lexicon, gloss are missing.",
+      "publishable": true,
+      "publishNote": "Nothing the family reads is in a language other than their own.",
+      "degrade": [
+        {
+          "capability": "lexicon",
+          "resolvedWith": "skills/structuring-spoken-recipes/lexicon.default.json",
+          "lost": "sentence roles, hedge reading, units and numerals, pivot and derivation cues, and section naming",
+          "consequence": "The page still splits on lexical cohesion and still marks digits and repetition. Sections go unnamed rather than named from a form nobody checked, no hedge is read so no gap comes from her own uncertainty, and no measure is recognised beyond a bare numeral.",
+          "reachesTheFamily": false
+        },
+        {
+          "capability": "gloss",
+          "resolvedWith": null,
+          "lost": "matching a fragment label to the page whose words it belongs to",
+          "consequence": "No label word can be scored, so every photograph is placed by visual weight and page appetite. The record says so instead of printing a table of zeroes.",
+          "reachesTheFamily": false
+        }
+      ]
+    },
+    "publishable": true,
+    "limitations": [
+      "No approved fragment carries this page. There is no collage, and the banner is typographic.",
+      "No sampled colour reaches this page and no other page in this cookbook has one to lend. Ground and ink are achromatic - chroma zero - and marks are made in ink. Nothing is derived from the transcript, because a hue hashed out of her words is a colour from nowhere.",
+      "Language pack: no lexicon for en. Lost: sentence roles, hedge reading, units and numerals, pivot and derivation cues, and section naming. The page still splits on lexical cohesion and still marks digits and repetition. Sections go unnamed rather than named from a form nobody checked, no hedge is read so no gap comes from her own uncertainty, and no measure is recognised beyond a bare numeral.",
+      "Language pack: no gloss for en. Lost: matching a fragment label to the page whose words it belongs to. No label word can be scored, so every photograph is placed by visual weight and page appetite. The record says so instead of printing a table of zeroes."
+    ]
+  },
+  "typePalette": {
+    "scripts": [
+      "Latin"
+    ],
+    "mood": {
+      "warmth": 0.19891415708698332,
+      "age": 0.24173339842818675,
+      "hand": 0.15393384154886008,
+      "sturdiness": -0.13333333333333333,
+      "contrast": 0.001491945469751954
+    },
+    "tokens": {
+      "typeStack": [
+        {
+          "role": "display",
+          "fontId": "fnt_literata"
+        },
+        {
+          "role": "text",
+          "fontId": "fnt_alegreya"
+        },
+        {
+          "role": "accent",
+          "fontId": "fnt_caveat"
+        },
+        {
+          "role": "caption",
+          "fontId": "fnt_pt_sans"
+        }
+      ],
+      "palette": {
+        "paperTint": "#ebebeb",
+        "ink": "#171717",
+        "accents": [
+          "#171717"
+        ],
+        "sampledFromFragmentIds": []
+      },
+      "rhythm": {
+        "measureRange": [
+          37,
+          65
+        ],
+        "leadingScale": 1.5,
+        "sectionSpacing": "generous"
+      }
+    },
+    "fonts": [
+      {
+        "fontId": "fnt_literata",
+        "family": "Literata",
+        "version": "gf-2026-08",
+        "licenceId": "OFL-1.1",
+        "licenceUrl": "https://openfontlicense.org",
+        "redistributable": true,
+        "scriptsCovered": [
+          "Latin",
+          "Cyrillic",
+          "Greek"
+        ],
+        "isSystemFont": false
+      },
+      {
+        "fontId": "fnt_alegreya",
+        "family": "Alegreya",
+        "version": "gf-2026-08",
+        "licenceId": "OFL-1.1",
+        "licenceUrl": "https://openfontlicense.org",
+        "redistributable": true,
+        "scriptsCovered": [
+          "Latin",
+          "Cyrillic",
+          "Greek"
+        ],
+        "isSystemFont": false
+      },
+      {
+        "fontId": "fnt_caveat",
+        "family": "Caveat",
+        "version": "gf-2026-08",
+        "licenceId": "OFL-1.1",
+        "licenceUrl": "https://openfontlicense.org",
+        "redistributable": true,
+        "scriptsCovered": [
+          "Latin",
+          "Cyrillic"
+        ],
+        "isSystemFont": false
+      },
+      {
+        "fontId": "fnt_pt_sans",
+        "family": "PT Sans",
+        "version": "gf-2026-08",
+        "licenceId": "OFL-1.1",
+        "licenceUrl": "https://openfontlicense.org",
+        "redistributable": true,
+        "scriptsCovered": [
+          "Latin",
+          "Cyrillic"
+        ],
+        "isSystemFont": false
+      }
+    ],
+    "colourSource": "none-achromatic",
+    "decisions": {
+      "type": [
+        {
+          "role": "display",
+          "fontId": "fnt_literata",
+          "family": "Literata",
+          "scripts": [
+            "Latin"
+          ],
+          "because": "one face covering Latin, closest to the mood read from the material (warmth 0.20, age 0.24, hand 0.15, sturdiness -0.13, contrast 0.00)"
+        },
+        {
+          "role": "text",
+          "fontId": "fnt_alegreya",
+          "family": "Alegreya",
+          "scripts": [
+            "Latin"
+          ],
+          "because": "one face covering Latin, closest to the mood read from the material (warmth 0.20, age 0.24, hand 0.15, sturdiness -0.13, contrast 0.00)"
+        },
+        {
+          "role": "accent",
+          "fontId": "fnt_caveat",
+          "family": "Caveat",
+          "scripts": [
+            "Latin"
+          ],
+          "because": "one face covering Latin, closest to the mood read from the material (warmth 0.20, age 0.24, hand 0.15, sturdiness -0.13, contrast 0.00)"
+        },
+        {
+          "role": "caption",
+          "fontId": "fnt_pt_sans",
+          "family": "PT Sans",
+          "scripts": [
+            "Latin"
+          ],
+          "because": "one face covering Latin, closest to the mood read from the material (warmth 0.20, age 0.24, hand 0.15, sturdiness -0.13, contrast 0.00)"
+        }
+      ],
+      "colour": [
+        {
+          "role": "all",
+          "source": "none-achromatic",
+          "to": "#ebebeb",
+          "because": "no photograph and no palette reached this page, and no other page in this cookbook has one to lend. The ground and the ink carry no hue at all: chroma is zero, not small. A hue hashed out of her transcript would be a colour from nowhere, and the page would be coloured by an accident of arithmetic."
+        },
+        {
+          "role": "accent-0",
+          "to": "#171717",
+          "because": "with no sampled colour there is no accent. Marks are made in ink, which is the same decision a person makes with one pencil."
+        }
+      ],
+      "dropped": [],
+      "colourSource": "none-achromatic",
+      "derivedColour": false,
+      "groundStatement": "Ground and ink are achromatic: chroma zero. No colour was sampled and none was invented."
+    }
+  },
+  "intent": {
+    "compositionId": "comp_727688e7",
+    "scatterSeed": "cap_01SYNTHETICGOLDEN00000000/synthetic",
+    "clusters": [],
+    "freeFragments": [],
+    "bannerMode": "typographic",
+    "placedInThisCookbook": [],
+    "reasons": {
+      "banner": "No fragment reaches this page. The banner is her title on two torn sheets, set to its own measure, which is a composition and not a placeholder.",
+      "density": "density 0 from 0 available piece(s)",
+      "scatter": "no scatter: nothing is left over from the banner",
+      "ledger": "This page places no photograph, so it spends nothing from the cookbook."
+    }
+  },
+  "claims": {
+    "claims": [],
+    "signals": [],
+    "gaps": [],
+    "recordingId": "rec_synthetic",
+    "completeness": {
+      "rule": "Her hedging is the primary signal. These four checks are arithmetic over her transcript and add to it: temperature without a time, a named completion without a time, an ingredient measured once and never used again, and a numeral that counts nothing.",
+      "pageHasAnyDuration": false,
+      "namedOnceFound": 0,
+      "namedOnceReported": 0,
+      "namedOnceHeldBack": 0,
+      "bareNumeralsFound": 0,
+      "note": "Every completeness gap found is reported."
+    }
+  },
+  "clarify": {
+    "ask": null,
+    "queued": [],
+    "wordingAvailable": true,
+    "note": "Nothing is open.",
+    "suggestionBox": {
+      "visibleOnPublishedPage": false,
+      "note": "The place a question lives is the working page. A finished or public page never shows one."
+    }
+  },
+  "marks": {
+    "grammar": {
+      "circle": {
+        "means": "a measured quantity as she gave it",
+        "appliesTo": [
+          "quantity"
+        ]
+      },
+      "underline": {
+        "means": "the moment a thing is done",
+        "appliesTo": [
+          "sensory-cue",
+          "completion"
+        ]
+      },
+      "colour-over": {
+        "means": "a temperature or a time to work to",
+        "appliesTo": [
+          "temperature",
+          "duration"
+        ]
+      },
+      "highlight": {
+        "means": "something she said twice over, out loud",
+        "appliesTo": [
+          "emphasis"
+        ]
+      },
+      "strike": {
+        "means": "a reading she replaced with another; both stand",
+        "appliesTo": [
+          "contradicted"
+        ]
+      },
+      "rule-above": {
+        "means": "a section begins",
+        "appliesTo": [
+          "section-open"
+        ]
+      },
+      "rule-below": {
+        "means": "an aside in her own voice",
+        "appliesTo": [
+          "family-aside"
+        ]
+      },
+      "numbered": {
+        "means": "a step in an order she gave",
+        "appliesTo": [
+          "ordered-step"
+        ]
+      },
+      "bulleted": {
+        "means": "one of a set with no order",
+        "appliesTo": [
+          "unordered-item"
+        ]
+      },
+      "checkbox": {
+        "means": "something to have ready before you start",
+        "appliesTo": [
+          "provision"
+        ]
+      },
+      "story": {
+        "means": "her own paper: she stopped cooking and told you something",
+        "appliesTo": [
+          "story"
+        ]
+      },
+      "gap": {
+        "means": "something is missing here and we know it",
+        "appliesTo": [
+          "unresolved"
+        ]
+      }
+    },
+    "marks": [
+      {
+        "blockId": "blk_synthetic_003",
+        "type": "numbered",
+        "structural": true,
+        "drawnBy": "the container itself",
+        "because": "one of 9 items she gave as a set"
+      }
+    ],
+    "notes": [],
+    "budget": 5,
+    "used": {},
+    "gapsMarked": 0,
+    "gapMarkCap": 2,
+    "legend": [
+      {
+        "type": "numbered",
+        "means": "a step in an order she gave"
+      }
+    ]
+  },
+  "plan": {
+    "pages": [
+      {
+        "pageIndex": 0,
+        "sourceRecordingId": "rec_synthetic",
+        "span": {
+          "start": 0,
+          "end": 710
+        },
+        "title": "The",
+        "titleSource": "product-noun",
+        "titleEvidence": {
+          "start": 14,
+          "end": 17
+        },
+        "titleIsHeadingForm": null,
+        "sections": [
+          {
+            "index": 0,
+            "name": null,
+            "nameStem": null,
+            "nameBecause": null,
+            "dependent": false,
+            "evidence": {
+              "start": 0,
+              "end": 710
+            },
+            "sentences": [
+              {
+                "start": 0,
+                "end": 70,
+                "text": "Oat biscuits, the ones I make when there is nothing else in the house.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 71,
+                "end": 167,
+                "text": "You want two cups of rolled oats, a hundred grams of butter, and half a cup of soft brown sugar.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 168,
+                "end": 220,
+                "text": "Melt the butter first, slowly, do not let it colour.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 221,
+                "end": 289,
+                "text": "Pour it over the oats and the sugar and stir until every oat is wet.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 290,
+                "end": 386,
+                "text": "I always press it down hard into the tin, hard, because a loose one falls apart when you cut it.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 387,
+                "end": 475,
+                "text": "Bake it at a hundred and eighty until the edges go dark gold, about twenty five minutes.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 476,
+                "end": 566,
+                "text": "Let it cool completely in the tin before you cut it, that is the part everyone gets wrong.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 567,
+                "end": 661,
+                "text": "My mother used to make these on a Sunday and the whole house smelled of them by the afternoon.",
+                "role": "instruction-line"
+              },
+              {
+                "start": 662,
+                "end": 710,
+                "text": "It keeps a week in a tin, if it lasts that long.",
+                "role": "instruction-line"
+              }
+            ]
+          }
+        ],
+        "sentenceCount": 9,
+        "splitFromSiblings": false
+      }
+    ],
+    "decisions": [],
+    "naming": {
+      "rule": "A heading is a form a person would have written. If the rule cannot produce one, the section is unnamed.",
+      "headingFormRuleDeclared": false,
+      "sections": 1,
+      "named": 0,
+      "unnamed": [],
+      "note": "Naming is suppressed: this locale declares no heading-form rule, so no heading can be checked and none is invented."
+    },
+    "approvalRequired": false,
+    "approvalQuestion": []
+  }
+}

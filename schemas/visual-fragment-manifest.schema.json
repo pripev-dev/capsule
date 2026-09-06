@@ -16,7 +16,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 1
+      "enum": [1, 2]
     },
     "assetType": {
       "enum": [
@@ -38,6 +38,33 @@
     "generatedAt": {
       "type": "string",
       "format": "date-time"
+    },
+    "visualRunId": {
+      "type": "string",
+      "pattern": "^vrun_[0-9A-Za-z_-]{1,40}$"
+    },
+    "pipelineVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selectionPolicyVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceSetSha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "contextSha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "budget": {
+      "$ref": "#/$defs/visualBudget"
+    },
+    "modelReceipts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/modelReceipt"
+      }
     },
     "items": {
       "type": "array"
@@ -114,9 +141,128 @@
           }
         }
       }
+    },
+    {
+      "$comment": "V1 remains readable for preserved historical bundles. Every V2 writer must bind the manifest to one immutable visual run and its accepted budget.",
+      "if": {
+        "properties": {
+          "schemaVersion": { "const": 2 }
+        },
+        "required": ["schemaVersion"]
+      },
+      "then": {
+        "required": [
+          "visualRunId",
+          "pipelineVersion",
+          "selectionPolicyVersion",
+          "sourceSetSha256",
+          "contextSha256",
+          "budget",
+          "modelReceipts"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": { "const": 2 },
+          "assetType": { "const": "direct-pixel-cutout" }
+        },
+        "required": ["schemaVersion", "assetType"]
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "required": [
+                "visualRunId",
+                "candidateId",
+                "candidateIdentitySha256",
+                "selectionOrigin",
+                "reviewedCanonicalAlphaSha256",
+                "reviewedRenderSha256",
+                "paperTreatmentSha256"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schemaVersion": { "const": 2 },
+          "assetType": { "const": "generated-source-derived-sticker" }
+        },
+        "required": ["schemaVersion", "assetType"]
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "required": [
+                "visualRunId",
+                "candidateId",
+                "candidateIdentitySha256",
+                "selectionOrigin",
+                "reviewedOutputSha256",
+                "referenceProvenance",
+                "similarityCheck"
+              ]
+            }
+          }
+        }
+      }
     }
   ],
   "$defs": {
+    "visualBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "cap", "estimated", "actual", "stageCaps"],
+      "properties": {
+        "currency": { "const": "USD" },
+        "cap": { "type": "number", "minimum": 0 },
+        "estimated": { "type": "number", "minimum": 0 },
+        "actual": { "type": "number", "minimum": 0 },
+        "stageCaps": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scout", "segment", "curate", "reserve"],
+          "properties": {
+            "scout": { "type": "number", "minimum": 0 },
+            "segment": { "type": "number", "minimum": 0 },
+            "curate": { "type": "number", "minimum": 0 },
+            "reserve": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "modelReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "model",
+        "purpose",
+        "promptVersion",
+        "inputUnits",
+        "outputUnits",
+        "currency",
+        "amount"
+      ],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "modelSnapshotWhenAvailable": { "type": ["string", "null"] },
+        "purpose": { "enum": ["scout", "segment", "curate", "refine", "generate"] },
+        "promptVersion": { "type": "string", "minLength": 1 },
+        "inputUnits": { "type": "number", "minimum": 0 },
+        "outputUnits": { "type": "number", "minimum": 0 },
+        "currency": { "const": "USD" },
+        "amount": { "type": "number", "minimum": 0 }
+      }
+    },
     "directCutout": {
       "type": "object",
       "additionalProperties": false,
@@ -144,6 +290,34 @@
           "type": "string",
           "pattern": "^frg_[0-9A-Za-z_-]{1,40}$"
         },
+        "visualRunId": {
+          "type": "string",
+          "pattern": "^vrun_[0-9A-Za-z_-]{1,40}$"
+        },
+        "candidateId": {
+          "type": "string",
+          "pattern": "^frg_[0-9A-Za-z_-]{1,40}$"
+        },
+        "candidateIdentitySha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "selectionOrigin": {
+          "enum": [
+            "automatic-recommended",
+            "automatic-alternate",
+            "user-rescue"
+          ]
+        },
+        "reviewedCanonicalAlphaSha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "reviewedRenderSha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "paperTreatmentSha256": {
+          "$ref": "common.schema.json#/$defs/sha256",
+          "description": "Hash of the complete regenerable treatment parameters. A metadata-only treatment change invalidates review even if stale render pixels were accidentally retained."
+        },
         "assetType": {
           "const": "direct-pixel-cutout"
         },
@@ -158,7 +332,10 @@
           "enum": [
             "object-on-ground",
             "graphic-on-flat-field",
-            "all-over-pattern"
+            "all-over-pattern",
+            "isolated-subject",
+            "contained-group",
+            "contextual-editorial"
           ],
           "description": "What separates figure from ground in the source image. Choosing this first is what stops a tray of cookies becoming twenty cookies."
         },
@@ -173,6 +350,11 @@
         "extractionMethod": {
           "enum": [
             "birefnet-matte",
+            "sam3-text",
+            "sam3-point",
+            "sam3-box",
+            "sam3-mask-refine",
+            "sam3-plus-birefnet",
             "flat-field-key",
             "line-trace",
             "torn-crop",
@@ -356,7 +538,8 @@
           "enum": [
             "auto-proposed",
             "user-clicked",
-            "user-circled"
+            "user-circled",
+            "user-rescue"
           ]
         },
         "reviewedByPersonId": {
@@ -371,6 +554,35 @@
             "private",
             "public-approved"
           ]
+        },
+        "provenanceAttestation": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Present only when a person overruled the automatic provenance classification for the source image. The classifier reads filenames, so it calls anything named like a screenshot third-party and refuses it a single pixel - which is the safe direction to be wrong in, and wrong whenever someone screenshots their own work. Overruling it is a statement a named person stands behind, and it travels with the asset so a published capsule can always answer who said this was ours. It is a record, not something to render.",
+          "required": [
+            "declaredBy",
+            "declaredAt",
+            "basis"
+          ],
+          "properties": {
+            "originalProvenance": {
+              "type": ["string", "null"],
+              "description": "What the automatic classifier decided before it was overruled. Kept beside the declaration rather than replaced, the way the preservation manifest keeps originals."
+            },
+            "declaredBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "declaredAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "basis": {
+              "type": "string",
+              "minLength": 8,
+              "description": "Why this person says the classifier was wrong. A declaration without a reason is a flag flip, and this field is the difference."
+            }
+          }
         },
         "paperTreatment": {
           "type": "object",
@@ -389,7 +601,10 @@
                 "deckle",
                 "taped",
                 "pinned",
-                "none"
+                "none",
+                "cream-sticker-border",
+                "unifying-paper-substrate",
+                "contained-paper-border"
               ]
             },
             "seed": {
@@ -397,6 +612,31 @@
               "minimum": 0
             },
             "borderRetentionPx": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "borderPx": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "substratePx": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "componentsUnified": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "creamHex": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
+            },
+            "shadowOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "insetPx": {
               "type": "integer",
               "minimum": 0
             },
@@ -428,6 +668,9 @@
           ],
           "pattern": "^visuals/approved-cutouts/",
           "description": "The treated derivative. Regenerable from alphaPngPath plus paperTreatment, and therefore not canonical."
+        },
+        "paperRenderSha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
         },
         "quality": {
           "type": "object",
@@ -553,7 +796,11 @@
           "if": {
             "properties": {
               "extractionClass": {
-                "const": "object-on-ground"
+                "enum": [
+                  "object-on-ground",
+                  "isolated-subject",
+                  "contained-group"
+                ]
               }
             },
             "required": [
@@ -565,12 +812,34 @@
               "extractionMethod": {
                 "enum": [
                   "birefnet-matte",
-                  "manual-circle"
+                  "manual-circle",
+                  "sam3-text",
+                  "sam3-point",
+                  "sam3-box",
+                  "sam3-mask-refine",
+                  "sam3-plus-birefnet"
                 ]
               },
               "maskSemantics": {
                 "const": "figure-ground"
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "extractionClass": {
+                "const": "contextual-editorial"
+              }
+            },
+            "required": ["extractionClass"]
+          },
+          "then": {
+            "properties": {
+              "outputMode": { "const": "editorial-cutout" },
+              "extractionMethod": { "const": "torn-crop" },
+              "maskSemantics": { "const": "torn-crop" }
             }
           }
         }
@@ -598,6 +867,27 @@
         "id": {
           "type": "string",
           "pattern": "^gen_[0-9A-Za-z_-]{1,40}$"
+        },
+        "visualRunId": {
+          "type": "string",
+          "pattern": "^vrun_[0-9A-Za-z_-]{1,40}$"
+        },
+        "candidateId": {
+          "type": "string",
+          "pattern": "^gen_[0-9A-Za-z_-]{1,40}$"
+        },
+        "candidateIdentitySha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "selectionOrigin": {
+          "enum": [
+            "automatic-recommended",
+            "automatic-alternate",
+            "user-rescue"
+          ]
+        },
+        "reviewedOutputSha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
         },
         "assetType": {
           "const": "generated-source-derived-sticker"
@@ -674,7 +964,7 @@
           }
         },
         "derivationLabel": {
-          "const": "generated-source-derived — not a piece of the original",
+          "const": "generated-source-derived – not a piece of the original",
           "description": "Pinned so a generated interpretation can never be relabelled as an extracted fragment."
         },
         "reviewDecision": {
@@ -689,6 +979,55 @@
         },
         "publicUseApproved": {
           "type": "boolean"
+        },
+        "referenceProvenance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "imageId",
+              "sha256",
+              "kind",
+              "containsPrivateScene",
+              "confirmedByPersonId",
+              "confirmedAt"
+            ],
+            "properties": {
+              "imageId": { "type": "string", "minLength": 1 },
+              "sha256": { "$ref": "common.schema.json#/$defs/sha256" },
+              "kind": {
+                "enum": ["tile", "pattern", "material", "ornament"]
+              },
+              "containsPrivateScene": {
+                "const": false
+              },
+              "confirmedByPersonId": {
+                "$ref": "common.schema.json#/$defs/personId"
+              },
+              "confirmedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "similarityCheck": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["passed", "maxSimilarity", "reasons"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "maxSimilarity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "reasons": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
         }
       }
     }

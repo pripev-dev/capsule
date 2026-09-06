@@ -9,8 +9,11 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { checkBlockTextIsQuoted } from "./quoted.mjs";
+export { checkBlockTextIsQuoted } from "./quoted.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const SCHEMA_DIR = path.resolve(HERE, "../../schemas");
@@ -80,6 +83,91 @@ function walk(node, visit, pointer = "") {
       walk(child, visit, `${pointer}/${key}`);
     }
   }
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+/**
+ * The public candidate identity algorithm. A reviewer approves these exact
+ * pixels and this exact treatment, not an ordinal slot that can later change.
+ */
+export function visualCandidateIdentity(manifest, item) {
+  const direct = item.assetType === "direct-pixel-cutout";
+  const payload = direct
+    ? {
+        assetType: item.assetType,
+        visualRunId: item.visualRunId,
+        sourceImageSha256: item.sourceImageSha256,
+        semanticTarget: item.label?.object,
+        extractionClass: item.extractionClass,
+        outputMode: item.outputMode,
+        maskSha256: item.maskSha256,
+        alphaPngSha256: item.alphaPngSha256,
+        reviewedRenderSha256: item.paperRenderSha256 ?? item.alphaPngSha256,
+        paperTreatmentSha256: item.paperTreatmentSha256,
+        pipelineVersion: manifest.pipelineVersion,
+      }
+    : {
+        assetType: item.assetType,
+        visualRunId: item.visualRunId,
+        sourceImageIds: [...(item.sourceImageIds ?? [])].sort(),
+        outputSha256: item.outputSha256,
+        model: item.model,
+        modelSnapshotWhenAvailable: item.modelSnapshotWhenAvailable,
+        pipelineVersion: manifest.pipelineVersion,
+      };
+  const sha256 = createHash("sha256").update(stableJson(payload)).digest("hex");
+  const prefix = direct ? "frg" : "gen";
+  return { sha256, candidateId: `${prefix}_${sha256.slice(0, 32)}` };
+}
+
+/** Checks the cross-field promises a JSON Schema cannot express. */
+export function checkVisualRunBindings(manifest) {
+  if (!manifest || manifest.schemaVersion !== 2) return [];
+  const failures = [];
+  if ((manifest.budget?.actual ?? 0) > (manifest.budget?.cap ?? 0)) {
+    failures.push("visual budget actual exceeds its accepted cap");
+  }
+  const stageTotal = Object.values(manifest.budget?.stageCaps ?? {}).reduce((sum, n) => sum + Number(n), 0);
+  if (stageTotal > (manifest.budget?.cap ?? 0) + 1e-9) {
+    failures.push("visual stage caps exceed the accepted cap");
+  }
+  for (const item of manifest.items ?? []) {
+    if (item.visualRunId !== manifest.visualRunId) {
+      failures.push(`${item.id}: item belongs to another visual run`);
+    }
+    const expected = visualCandidateIdentity(manifest, item);
+    if (item.candidateId !== expected.candidateId || item.id !== expected.candidateId) {
+      failures.push(`${item.id}: candidate id does not match its immutable identity`);
+    }
+    if (item.candidateIdentitySha256 !== expected.sha256) {
+      failures.push(`${item.id}: candidate identity hash does not match its pixels and treatment`);
+    }
+    if (item.assetType === "direct-pixel-cutout") {
+      const renderHash = item.paperRenderSha256 ?? item.alphaPngSha256;
+      const treatmentHash = createHash("sha256")
+        .update(stableJson(item.paperTreatment ?? null))
+        .digest("hex");
+      if (item.paperTreatmentSha256 !== treatmentHash) {
+        failures.push(`${item.id}: paper treatment hash does not match its regenerable parameters`);
+      }
+      if (item.reviewedCanonicalAlphaSha256 !== item.alphaPngSha256) {
+        failures.push(`${item.id}: reviewed alpha hash does not match the canonical alpha`);
+      }
+      if (item.reviewedRenderSha256 !== renderHash) {
+        failures.push(`${item.id}: reviewed render hash does not match the rendered asset`);
+      }
+    } else if (item.reviewedOutputSha256 !== item.outputSha256) {
+      failures.push(`${item.id}: reviewed generated hash does not match the output`);
+    }
+  }
+  return failures;
 }
 
 /**
@@ -234,6 +322,12 @@ export function checkAll(capsule, { evidenceMap, fragmentManifest } = {}) {
     for (const b of checkEvidenceQuotes(capsule, evidenceMap)) {
       failures.push(`evidence ${b.evidenceId}: ${b.reason}`);
     }
+    for (const b of checkBlockTextIsQuoted(capsule, evidenceMap)) {
+      failures.push(`block text ${b.blockId}: ${b.reason}`);
+    }
+  }
+  if (fragmentManifest) {
+    failures.push(...checkVisualRunBindings(fragmentManifest));
   }
   return failures;
 }

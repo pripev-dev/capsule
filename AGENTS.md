@@ -6,14 +6,41 @@
 
 ## Project overview
 
-**Status: Phase A. Scaffolding only – no implementation.** Nothing in this
-repository may be described as working until its test is green.
+**Status: Phase A contract implemented, and the deterministic composition engine
+is here.** The schema set, validators, reference fixture, visual-fragment
+manifest V2, the ported engine and the privacy guard have **124 tests**. On a
+clean public clone 114 are runnable and 10 skip - those 10 replay the private Design
+export and say so rather than failing. Several more skip anywhere git is
+unavailable, because they ask git how it classifies or enumerates the tracked
+files. The offline viewer remains later work; so does
+the renderer, which is deliberately still in the Stage 1 export rather than in
+this repository. Nothing here may be described as working
+until its test is green.
+
+The engine arrived on 2026-09-05 from the Claude Design prototype, converted
+CommonJS/browser-global IIFE to ESM with every body copied and checked byte for
+byte. What proves it is not review but output: the four archived runs and both
+cold starts replay through it byte-identically, and a committed synthetic golden
+does the same for six surfaces on a clean public clone.
+
+**Two files in this repository are called validate, and both names are right.**
+`src/engine/validate.mjs` holds the deterministic *layout* refusals - contrast,
+legibility, collisions, overflow, undeclared print surfaces, pagination. It
+answers with a code, a subject and a sentence, because
+`repairing-a-failed-validation` cannot repair a boolean. `src/validate/index.mjs`
+is the capsule *contract* validator: JSON Schema plus the cross-field checks.
+Neither imports the other.
+
+**`pretext(surface)` in `src/engine/layout.mjs` is not `@chenglou/pretext`.** It
+is a local function that became the single source of every measurement on a
+surface. The name collides with a documented dependency this project does not
+have and has never installed; that dependency is still prose in the handbook.
 
 Two things depend on this repository and neither may own it: the cookbook
 agent writes `capsule.json`, and the application renders it. The schema is
 therefore the seam, and it is versioned, migrated and tested on its own.
 
-It is private today and **goes public before launch**. The promise in the
+It is **public**, as required before launch. The promise in the
 proposal - that a family can reconstruct their capsule without us - is only
 checkable if the schema and the viewer are readable by anyone.
 
@@ -36,7 +63,7 @@ previous implementation was deleted on 2026-08-26 for not following it.
 - **Never let a rendered output become the truth.** HTML, PDF and screenshots are disposable derivatives. `canonical` is `false` by construction.
 - **Never put a pixel coordinate or a CSS string in composition intent.** The agent declares roles, density and seeds; the engine computes geometry.
 - **Never mix direct cutouts with generated derivatives.** Different types, different directories, different manifests. A generated interpretation is never described as a piece of the original.
-- **Never commit family material.** The redacted fixture exists so the schema can be judged without the recording. Real material stays in `dotPrivate`.
+- **Never commit family material.** The redacted fixture exists so the schema can be judged without the recording. Real material stays in `dotPrivate`. `npm run check:privacy` enforces the mechanical part of this and is run **before** `git push`, not only in CI - on a public branch, CI is detection after publication. See README.md, "Before you push", for what it refuses and, more importantly, for what it cannot.
 
 ## Conventions
 

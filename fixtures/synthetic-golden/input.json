@@ -1,0 +1,50 @@
+{
+  "$comment": "A synthetic golden input. Invented recipe, invented speaker, no family material of any kind. The expected outputs beside it were produced by the archived Claude Design prototype, not by the ported engine.",
+  "jobId": "job_synthetic_golden",
+  "capsuleId": "cap_01SYNTHETICGOLDEN00000000",
+  "now": "2026-09-05T00:00:00.000Z",
+  "declaredLocale": "en",
+  "recording": {
+    "recordingId": "rec_synthetic",
+    "recordingKey": "synthetic",
+    "durationSeconds": 96,
+    "approvedAt": "2026-09-05T00:00:00.000Z",
+    "text": "Oat biscuits, the ones I make when there is nothing else in the house. You want two cups of rolled oats, a hundred grams of butter, and half a cup of soft brown sugar. Melt the butter first, slowly, do not let it colour. Pour it over the oats and the sugar and stir until every oat is wet. I always press it down hard into the tin, hard, because a loose one falls apart when you cut it. Bake it at a hundred and eighty until the edges go dark gold, about twenty five minutes. Let it cool completely in the tin before you cut it, that is the part everyone gets wrong. My mother used to make these on a Sunday and the whole house smelled of them by the afternoon. It keeps a week in a tin, if it lasts that long."
+  },
+  "surfaces": [
+    {
+      "kind": "screen",
+      "w": 390,
+      "h": 844
+    },
+    {
+      "kind": "screen",
+      "w": 844,
+      "h": 390
+    },
+    {
+      "kind": "screen",
+      "w": 834,
+      "h": 1112
+    },
+    {
+      "kind": "screen",
+      "w": 1180,
+      "h": 860
+    },
+    {
+      "kind": "print",
+      "w": 816,
+      "h": 1056,
+      "pageH": 1056,
+      "widthInches": 8.5
+    },
+    {
+      "kind": "print",
+      "w": 794,
+      "h": 1123,
+      "pageH": 1123,
+      "widthInches": 8.27
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema-note": "Exact repository-relative paths only, keyed by rule id from src/privacy/rules.mjs. No globs: a glob is an exemption that later files can join without anyone reviewing them. Every entry below is a file a person looked at and decided was publishable, and the reason is written next to it.",
+
+  "$private-path": "Both fixture trees are synthetic and were written for this repository. minimal-valid/ is a hand-built smallest document that satisfies capsule.schema.json, invented for the schema tests. synthetic-golden/ is the invented-recipe transcript and the page the archived Claude Design prototype composed from it, kept byte-for-byte as the port's oracle. Neither contains family material; the recipe in synthetic-golden is not one anybody cooks.",
+  "private-path": [
+    "fixtures/minimal-valid/capsule.json",
+    "fixtures/minimal-valid/evidence-map.json",
+    "fixtures/minimal-valid/visual-fragments.json",
+    "fixtures/synthetic-golden/README.md",
+    "fixtures/synthetic-golden/expected-capsule.json",
+    "fixtures/synthetic-golden/expected-run.json",
+    "fixtures/synthetic-golden/expected-surfaces.json",
+    "fixtures/synthetic-golden/input.json"
+  ]
+}

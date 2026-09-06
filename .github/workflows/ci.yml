@@ -26,6 +26,7 @@ jobs:
         run: |
           test -f AGENTS.md
           test -f README.md
+          test -f privacy-allowlist.json
           test -f schemas/capsule.schema.json
           test -f schemas/preservation-manifest.schema.json
           test -f schemas/visual-fragment-manifest.schema.json
@@ -47,17 +48,24 @@ jobs:
       - name: Validate schemas and fixtures
         run: npm test
 
-      # This repository goes public. The layered-cake family recording, its
-      # transcript and its images must never reach it, so the check is
-      # mechanical rather than a matter of remembering.
+      # ---------------------------------------------------------------------
+      # This repository is public, so the guard is mechanical rather than a
+      # matter of remembering.
+      #
+      # It is the SAME command a person runs locally - `npm run check:privacy`,
+      # Node and git only, no bash and no `grep -P`. That matters: the guard it
+      # replaced was a pile of shell pipelines that could not be run on the
+      # Windows development machine at all, so nobody ever ran it before
+      # pushing and its first execution was always after publication.
+      #
+      # And this step is the SECOND line, not the first. A CI check on a public
+      # branch is detection after the fact: when this job turns red the blob is
+      # already on GitHub and already in its API, and removing it needs a
+      # history rewrite rather than a commit. Prevention is running the command
+      # before `git push`. See README.md, "Before you push".
+      #
+      # What it refuses, and what proves each: test/privacy.test.mjs builds a
+      # real temporary repository per category and asserts the refusal.
+      # ---------------------------------------------------------------------
       - name: Refuse family material
-        shell: bash
-        run: |
-          if git ls-files | grep -Ei '\.(ogg|opus|mp3|m4a|wav)$'; then
-            echo "::error::An audio file is tracked in a repository that goes public."
-            exit 1
-          fi
-          if git grep -lI --cached -E '[а-яА-ЯёЁ]{6,}' -- . ':!*.md' > /dev/null 2>&1; then
-            echo "::error::Cyrillic source material found outside documentation."
-            exit 1
-          fi
+        run: npm run check:privacy

@@ -180,14 +180,14 @@
   ],
 
   "blocks": [
-    { "blockId": "blk_title", "type": "title", "text": "Sunday pancakes", "evidence": ["ev_0001"], "authoredBy": { "kind": "agent" } },
+    { "blockId": "blk_title", "type": "title", "text": "Sunday pancakes", "evidence": ["ev_title"], "authoredBy": { "kind": "agent" } },
     { "blockId": "blk_banner", "type": "collage-anchor" },
     {
       "blockId": "blk_chapter",
       "type": "voice-chapter",
       "text": "The batter",
       "recordingRange": { "recordingId": "rec_kitchen_call", "start": 0, "end": 24.8 },
-      "evidence": ["ev_0001"]
+      "evidence": ["ev_0002"]
     },
     {
       "blockId": "blk_ingredients",
@@ -206,7 +206,7 @@
     {
       "blockId": "blk_rest",
       "type": "instruction-line",
-      "text": "Rest the batter while the pan comes up.",
+      "text": "Rest the batter while the pan comes up",
       "evidence": ["ev_0002"]
     },
     { "blockId": "blk_missing_heat", "type": "unresolved-note", "claimRefs": ["clm_pan_temp"] }
