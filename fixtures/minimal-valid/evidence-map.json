@@ -4,6 +4,16 @@
   "kind": "accepted",
   "records": [
     {
+      "evidenceId": "ev_title",
+      "transcriptId": "tr_family",
+      "segmentId": "seg_0001",
+      "charStart": 0,
+      "charEnd": 15,
+      "quote": "Sunday pancakes",
+      "language": "en-GB",
+      "recordingId": "rec_kitchen_call"
+    },
+    {
       "evidenceId": "ev_0001",
       "transcriptId": "tr_family",
       "segmentId": "seg_0001",

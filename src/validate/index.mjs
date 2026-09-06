@@ -12,6 +12,8 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { checkBlockTextIsQuoted } from "./quoted.mjs";
+export { checkBlockTextIsQuoted } from "./quoted.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const SCHEMA_DIR = path.resolve(HERE, "../../schemas");
@@ -319,6 +321,9 @@ export function checkAll(capsule, { evidenceMap, fragmentManifest } = {}) {
   if (evidenceMap) {
     for (const b of checkEvidenceQuotes(capsule, evidenceMap)) {
       failures.push(`evidence ${b.evidenceId}: ${b.reason}`);
+    }
+    for (const b of checkBlockTextIsQuoted(capsule, evidenceMap)) {
+      failures.push(`block text ${b.blockId}: ${b.reason}`);
     }
   }
   if (fragmentManifest) {
