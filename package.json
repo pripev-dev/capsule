@@ -10,12 +10,16 @@
   },
   "exports": {
     "./validate": "./src/validate/index.mjs",
+    "./privacy": "./src/privacy/check.mjs",
+    "./privacy/rules": "./src/privacy/rules.mjs",
+    "./privacy/cli": "./src/privacy/cli.mjs",
     "./engine/*": "./src/engine/*.mjs",
     "./schemas/*": "./schemas/*",
     "./fixtures/*": "./fixtures/*"
   },
   "scripts": {
-    "test": "node --test \"test/**/*.test.mjs\""
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "check:privacy": "node src/privacy/cli.mjs"
   },
   "devDependencies": {
     "ajv": "^8.17.1",

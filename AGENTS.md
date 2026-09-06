@@ -8,10 +8,11 @@
 
 **Status: Phase A contract implemented, and the deterministic composition engine
 is here.** The schema set, validators, reference fixture, visual-fragment
-manifest V2 and the ported engine pass **85 tests**. On a clean public clone 75
-pass and 10 skip - those 10 replay the private Design export and say so rather
-than failing. Two more skip anywhere git is unavailable, because they ask git how
-it classifies the tracked files. The offline viewer remains later work; so does
+manifest V2, the ported engine and the privacy guard pass **119 tests**. On a
+clean public clone 109 pass and 10 skip - those 10 replay the private Design
+export and say so rather than failing. Several more skip anywhere git is
+unavailable, because they ask git how it classifies or enumerates the tracked
+files. The offline viewer remains later work; so does
 the renderer, which is deliberately still in the Stage 1 export rather than in
 this repository. Nothing here may be described as working
 until its test is green.
@@ -62,7 +63,7 @@ previous implementation was deleted on 2026-08-26 for not following it.
 - **Never let a rendered output become the truth.** HTML, PDF and screenshots are disposable derivatives. `canonical` is `false` by construction.
 - **Never put a pixel coordinate or a CSS string in composition intent.** The agent declares roles, density and seeds; the engine computes geometry.
 - **Never mix direct cutouts with generated derivatives.** Different types, different directories, different manifests. A generated interpretation is never described as a piece of the original.
-- **Never commit family material.** The redacted fixture exists so the schema can be judged without the recording. Real material stays in `dotPrivate`.
+- **Never commit family material.** The redacted fixture exists so the schema can be judged without the recording. Real material stays in `dotPrivate`. `npm run check:privacy` enforces the mechanical part of this and is run **before** `git push`, not only in CI - on a public branch, CI is detection after publication. See README.md, "Before you push", for what it refuses and, more importantly, for what it cannot.
 
 ## Conventions
 
