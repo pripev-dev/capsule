@@ -469,3 +469,84 @@ test("fragment quality is measured, and its verdict is a closed set", () => {
   manifest.items[0].quality.verdict = "probably fine";
   assert.equal(validate("visual-fragment-manifest.schema.json", manifest).valid, false);
 });
+
+test("a declined pack is a different fact from no visual material", () => {
+  // Added at Phase E M7.
+  //
+  // Both end as a voice-only page, and conflating them loses something the
+  // family said. `not-used` means there was nothing to look at. `declined`
+  // means they looked at their own photographs and chose none of them - which
+  // is an approved product outcome, not a failure to reach a threshold.
+  //
+  // Before this, the only expressible outcomes were "approved" and "not-used",
+  // so a family who declined everything could not be represented at all and
+  // the bundle was refused.
+  const manifest = v2Fragments();
+  manifest.status = "declined";
+  manifest.items = [];
+  const declined = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(declined.valid, true, JSON.stringify(declined.errors, null, 2));
+
+  manifest.status = "not-used";
+  const unused = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(unused.valid, true, "no visual material stays expressible too");
+
+  manifest.status = "rejected";
+  assert.equal(
+    validate("visual-fragment-manifest.schema.json", manifest).valid,
+    false,
+    "the outcome vocabulary is closed; a new one is a deliberate schema change",
+  );
+});
+
+test("a sparse pack is approved with fewer items, not a status of its own", () => {
+  // Gate 1b's eight-asset floor is a benchmark for the AUTOMATIC selector. It
+  // was never meant to be an intake rule, and a family with three good
+  // photographs is not a failure case. The schema has always allowed this; the
+  // refusal lived downstream, which is where M7 removes it.
+  const manifest = v2Fragments();
+  manifest.status = "approved";
+  manifest.items = manifest.items.slice(0, 1);
+  const result = validate("visual-fragment-manifest.schema.json", manifest);
+  assert.equal(result.valid, true, JSON.stringify(result.errors, null, 2));
+  assert.equal(manifest.items.length, 1);
+});
+
+test("the durable contract already records a family correction in full", () => {
+  // Worth pinning, because M7 found it rather than assuming it: the capsule
+  // schema needed NO change for corrected transcripts. `kind: family-corrected`,
+  // `parentTranscriptId` and a corrections array with previous text, corrected
+  // text, author and timestamp were all already here.
+  //
+  // The refusal was in cookbook-agent's approved-input adapter, which had no
+  // way to build any of it. A schema gap and an adapter gap look identical from
+  // the outside and are fixed in completely different places.
+  const capsule = load("capsule.json");
+  const transcript = capsule.transcripts[0];
+  const corrected = {
+    ...transcript,
+    transcriptId: "tr_family_corrected_1",
+    kind: "family-corrected",
+    ordinal: transcript.ordinal + 1,
+    parentTranscriptId: transcript.transcriptId,
+    corrections: [
+      {
+        correctionId: "cor_1",
+        targetSegmentId: transcript.segments[0].segmentId,
+        previousText: transcript.segments[0].text,
+        correctedText: `${transcript.segments[0].text}.`,
+        reason: "the machine heard it without the final stop",
+        authorPersonId: capsule.people[0].personId,
+        at: "2026-09-11T12:00:00.000Z",
+      },
+    ],
+  };
+  capsule.transcripts.push(corrected);
+
+  const result = validate("capsule.schema.json", capsule);
+  assert.equal(result.valid, true, JSON.stringify(result.errors, null, 2));
+
+  // A correction without an author or a timestamp is not a correction history.
+  delete corrected.corrections[0].authorPersonId;
+  assert.equal(validate("capsule.schema.json", capsule).valid, false, "an unattributed correction was accepted");
+});

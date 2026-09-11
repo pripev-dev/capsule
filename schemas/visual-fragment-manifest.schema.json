@@ -25,11 +25,13 @@
       ]
     },
     "status": {
+      "description": "`not-used` means there was no visual material to review. `declined` means there was, and a named human reviewer approved none of it. Both end as a voice-only page, and they are deliberately different facts: one says the family sent no photographs, the other says they looked at their own and chose not to use them. A sparse pack is `approved` with fewer items, not a status of its own.",
       "enum": [
         "pending-extraction-and-review",
         "in-review",
         "approved",
-        "not-used"
+        "not-used",
+        "declined"
       ]
     },
     "capsuleId": {
