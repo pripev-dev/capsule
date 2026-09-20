@@ -29,3 +29,24 @@ central-directory duplicates and compressed oversized entries.
 
 Hosted permission filtering, offline rendering, font licensing, PDF and the
 export sheet remain required work. This module alone does not complete M13.
+
+
+## Offline reading fallback
+
+`offlineHtml` generates a file-openable reader with escaped family text,
+original block order, text marks, transcript versions and explicit native audio
+controls. Media links resolve only to supplied archive paths. It has no remote
+scripts, fetch calls, account requirement or autoplay. A CSP restricts resources
+to local files and the one hashed font-check script. A missing licensed capsule
+font refuses generation; a failed browser font load leaves the recipe hidden
+with a visible explanation instead of silently declaring a successful render.
+
+The reader is a minimal fallback, not the approved composed scrapbook layout.
+Visual fragment placement and PDF remain separate work. The capsule document
+is still canonical. No inferred layout or replacement recipe text is stored.
+
+Seven focused archive/reader tests pass. A synthetic extracted copy was opened
+in Chromium from a file URL with network disabled, at 320px. The bundled
+Alegreya font loaded, the recipe was visible, no horizontal overflow occurred,
+and the console had no errors or warnings. The browser was closed afterwards.
+This check does not establish full media playback or human acceptance.
