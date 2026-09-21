@@ -22,7 +22,8 @@
   },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\"",
-    "check:privacy": "node src/privacy/cli.mjs"
+    "check:privacy": "node src/privacy/cli.mjs",
+    "archive": "node src/archive/cli.mjs"
   },
   "//dependencies": "ajv is a runtime dependency, not a development one. `./validate` is a published entry point and it imports ajv on its first line, so anything depending on this package needs ajv present. It sat in devDependencies until 2026-09-06 and nothing noticed, because the only consumer was `kitchen`, which happens to depend on ajv itself - so the packaging defect was invisible for exactly as long as there was one consumer.",
   "dependencies": {

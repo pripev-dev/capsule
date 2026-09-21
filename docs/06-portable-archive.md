@@ -50,3 +50,24 @@ in Chromium from a file URL with network disabled, at 320px. The bundled
 Alegreya font loaded, the recipe was visible, no horizontal overflow occurred,
 and the console had no errors or warnings. The browser was closed afterwards.
 This check does not establish full media playback or human acceptance.
+
+
+## Checking a copy without the hosted application
+
+With Node 22 or later and this package's dependencies installed:
+
+```sh
+npm run archive -- verify /path/to/family-capsule.zip
+npm run archive -- restore /path/to/family-capsule.zip /existing/parent
+npm run archive -- verify-directory /path/to/extracted-copy
+```
+
+Verification prints a short result and exits nonzero on damage. Restoration
+prints the new directory it allocated. The directory verifier rejects symlinks
+and non-file entries, applies size/count bounds before reading, and verifies
+all extracted files against the index and checksums without recompressing.
+It does not execute the viewer or contact Pripev. Empty directories carry no
+canonical content; only the indexed files participate in integrity checking.
+
+Eight focused tests pass, including the real command's successful verify and
+restore paths, failed extracted-copy verification and unchanged source bytes.

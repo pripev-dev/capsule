@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -5,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { zipSync, unzipSync } from "fflate";
 import { createArchive, verifyArchive } from "../src/archive/index.mjs";
-import { restoreArchive } from "../src/archive/restore.mjs";
+import { restoreArchive, verifyDirectory } from "../src/archive/restore.mjs";
 
 const entries = () => [
   { path: "capsule.json", bytes: Buffer.from('{"synthetic":true}') },
@@ -71,4 +73,28 @@ test("central-directory duplicates are refused rather than silently overwritten"
 test("compressed oversized entries are refused before decompression", () => {
   const zip = zipSync({ large: Buffer.alloc(1024 * 1024) });
   assert.throws(() => verifyArchive(zip, { files: 10, fileBytes: 1024, totalBytes: 4096 }), /limits/);
+});
+
+
+test("standalone verification checks ZIPs and extracted copies without an account", () => {
+  const parent = mkdtempSync(join(tmpdir(), "pripev-archive-test-"));
+  const cli = new URL("../src/archive/cli.mjs", import.meta.url);
+  try {
+    const zip = createArchive(entries());
+    const source = join(parent, "source.zip");
+    writeFileSync(source, zip);
+    const checked = spawnSync(process.execPath, [fileURLToPath(cli), "verify", source], { encoding: "utf8", timeout: 10000 });
+    assert.equal(checked.status, 0, checked.stderr);
+    assert.equal(JSON.parse(checked.stdout).verified, true);
+    const restoredResult = spawnSync(process.execPath, [fileURLToPath(cli), "restore", source, parent], { encoding: "utf8", timeout: 10000 });
+    assert.equal(restoredResult.status, 0, restoredResult.stderr);
+    const restored = JSON.parse(restoredResult.stdout).restored;
+    assert.equal(verifyDirectory(restored).length, 4);
+    writeFileSync(join(restored, "capsule.json"), "corrupted");
+    assert.throws(() => verifyDirectory(restored), /integrity/);
+    assert.deepEqual(readFileSync(source), zip);
+    const failed = spawnSync(process.execPath, [fileURLToPath(cli), "verify-directory", restored], { encoding: "utf8", timeout: 10000 });
+    assert.equal(failed.status, 1);
+    assert.match(failed.stderr, /integrity/);
+  } finally { rmSync(parent, { recursive: true, force: true }); }
 });

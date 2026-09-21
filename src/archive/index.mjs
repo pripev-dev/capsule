@@ -4,7 +4,7 @@ import { zipSync, unzipSync } from "fflate";
 // Packaging is deliberately downstream of permission filtering. This module
 // never accepts a directory to crawl, credentials, or an object-store handle.
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
-const defaults = Object.freeze({ files: 4096, fileBytes: 64 * 1024 * 1024, totalBytes: 256 * 1024 * 1024 });
+export const ARCHIVE_LIMITS = Object.freeze({ files: 4096, fileBytes: 64 * 1024 * 1024, totalBytes: 256 * 1024 * 1024 });
 const INDEX = "archive.json";
 const CHECKSUMS = "checksums.sha256";
 
@@ -36,7 +36,7 @@ function inventory(limits) {
 }
 
 /** Deterministic ZIP containing only explicitly supplied, already authorised bytes. */
-export function createArchive(entries, limits = defaults) {
+export function createArchive(entries, limits = ARCHIVE_LIMITS) {
   const check = inventory(limits);
   const files = Object.create(null);
   const records = [];
@@ -56,12 +56,28 @@ export function createArchive(entries, limits = defaults) {
 }
 
 /** Verify everything before a caller writes any restored bytes. No partial success. */
-export function verifyArchive(zip, limits = defaults) {
+export function verifyArchive(zip, limits = ARCHIVE_LIMITS) {
   if (!(zip instanceof Uint8Array) || zip.length > limits.totalBytes + limits.files * 1024) throw new Error("Archive exceeds limits");
   const check = inventory(limits);
   // fflate calls filter for each central-directory entry before allocating its
   // output. Reject duplicates and inflated sizes before decompressing anything.
   const files = unzipSync(zip, { filter: entry => { check(entry.name, entry.originalSize); return true; } });
+  return verifyContents(files, limits);
+}
+
+/** Verify an extracted inventory without recompressing it. */
+export function verifyEntries(entries, limits = ARCHIVE_LIMITS) {
+  const check = inventory(limits);
+  const files = Object.create(null);
+  for (const { path, bytes } of entries) {
+    if (!(bytes instanceof Uint8Array)) throw new Error("Archive bytes are required");
+    check(path, bytes.length);
+    files[path] = bytes;
+  }
+  return verifyContents(files, limits);
+}
+
+function verifyContents(files, limits) {
   if (!files[INDEX] || !files[CHECKSUMS]) throw new Error("Archive index is missing");
   const index = JSON.parse(Buffer.from(files[INDEX]).toString("utf8"));
   if (index.format !== "pripev-archive" || index.version !== 1 || !Array.isArray(index.files)) throw new Error("Unsupported archive format");
