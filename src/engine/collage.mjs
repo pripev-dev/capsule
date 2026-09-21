@@ -223,7 +223,11 @@ function scatter(opts) {
       if (!best || score > best.score) best = { score: score, rect: rect, zone: z.id, side: side };
     }
     if (!best) continue;
-    var rot = rng.range(r, b.rotation.min, b.rotation.max) * (opts.mirror ? -1 : 1);
+    // The contract names it rotationRangeDegrees; the prototype's in-memory
+    // brief called it rotation. Reading only the latter crashed every real
+    // capsule with a free fragment.
+    var turn = b.rotationRangeDegrees || b.rotation || { min: -6, max: 6 };
+    var rot = rng.range(r, turn.min, turn.max) * (opts.mirror ? -1 : 1);
     out.push({ placementId: b.placementId, fragmentId: b.fragmentId, src: f.src,
                x: best.rect.x, y: best.rect.y, w: best.rect.w, h: best.rect.h,
                rot: rot, zone: best.zone, side: best.side,
