@@ -21,3 +21,11 @@ test("the public checkAll catches changed block text with unchanged evidence", (
   const failures = checkAll(doc, { evidenceMap: read("evidence-map.json") });
   assert.ok(failures.some((f) => f.startsWith("block text blk_title:")));
 });
+test("a family rewrite keeps its citation but is not forced back into a quote", () => {
+  const rewritten = { ...block("Add three ripe pears"), authoredBy: { kind: "family", at: "2026-09-22T10:00:00Z" } };
+  assert.deepEqual(checkBlockTextIsQuoted({ blocks: [rewritten] }, evidence), []);
+  // The exemption is from the slice rule only: it must still cite something.
+  assert.equal(checkBlockTextIsQuoted({ blocks: [{ ...rewritten, evidence: [] }] }, evidence).length, 1);
+  // And an agent block claiming nothing about authorship gets no exemption.
+  assert.equal(checkBlockTextIsQuoted({ blocks: [{ ...rewritten, authoredBy: { kind: "agent" } }] }, evidence).length, 1);
+});
