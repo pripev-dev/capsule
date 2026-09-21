@@ -42,3 +42,11 @@ test("reading archive refuses changed documents and competing reader files", () 
   assert.throws(() => createReadingArchive(entries, font), /integrity/);
   assert.throws(() => createReadingArchive([...payload(), { path: "viewer/index.html", bytes: Buffer.from("other") }], font), /Duplicate/);
 });
+
+
+test("reading archive checks included media against canonical references as well as ZIP checksums", () => {
+  const entries = payload();
+  const capsule = JSON.parse(entries.find(file => file.path === "capsule.json").bytes);
+  entries.push({ path: capsule.recordings[0].original.ref.archivePath, bytes: Buffer.from("substituted recording") });
+  assert.throws(() => createReadingArchive(entries, font), /media reference failed integrity/);
+});

@@ -102,3 +102,8 @@ cross-document closure, and adds `viewer/index.html`. Existing competing viewer
 files are refused. Payload bytes are preserved exactly. Two tests cover this
 assembly and its failure paths; all twelve archive/reader tests pass together.
 This is not the full M13 export: composed rendering and PDF remain outstanding.
+
+Included source and visual bytes are also checked against their canonical
+references before packaging. A self-consistent ZIP checksum cannot make a
+substituted recording match the original capsule hash. A focused regression
+covers that distinction; deliberately omitted media remain omitted.
