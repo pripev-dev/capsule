@@ -39,6 +39,8 @@ function readFragments(intakeFragments) {
       quality: f.quality || null,
       aspect: box.width / Math.max(1, box.height),
       area: box.width * box.height,
+      // Share of the box the cutout itself covers, when the manifest knows it.
+      fill: typeof f.fill === 'number' ? f.fill : null,
       contour: f.contour || defaultContour()
     };
   });

@@ -45,7 +45,13 @@ function packBanner(opts) {
   // half to two and a half times over - and the pieces that arrive later come in
   // smaller, so the heap gets chinked rather than restacked.
   var target = 1.15 + density * 1.15;
-  var maxItems = Math.round(14 + density * 30);
+  // How much of its own box each cutout actually covers. A string of sweets on
+  // a transparent ground fills a third of its rectangle; counting the whole
+  // rectangle as paper left a heap of them full of holes. A fragment that does
+  // not say is taken as solid, so older capsules pack exactly as before.
+  var fillOf = function (f) { return f.fill > 0 && f.fill <= 1 ? Math.max(0.25, f.fill) : 1; };
+  var meanFill = frags.reduce(function (sum, f) { return sum + fillOf(f); }, 0) / frags.length;
+  var maxItems = Math.round((14 + density * 30) / Math.max(0.5, meanFill));
   // And the pieces are sized for the heap they are in, from the geometry rather
   // than from a constant. A cutout most of the banner's height is a photograph,
   // not a sticker: four of them fill any rectangle and stop, which is how a heap
@@ -122,7 +128,7 @@ function packBanner(opts) {
                  rot: rot, z: items.length, weight: f.weight, mode: f.mode, label: f.label };
     items.push(item);
     lastOf[f.id] = item;
-    stamp(grid, GX, GY, box, item);
+    stamp(grid, GX, GY, box, item, fillOf(f));
   }
   var cov = 0; for (var i = 0; i < grid.length; i++) cov += Math.min(1, grid[i]);
   var kinds = Object.keys(timesUsed).filter(function (k) { return timesUsed[k] > 0; });
@@ -133,12 +139,12 @@ function packBanner(opts) {
 
 function wRank(f) { return f.weight === 'heavy' ? 3 : f.weight === 'medium' ? 2 : 1; }
 
-function stamp(grid, GX, GY, box, it) {
+function stamp(grid, GX, GY, box, it, fill) {
   var cw = box.w / GX, ch = box.h / GY;
   for (var gy = 0; gy < GY; gy++) for (var gx = 0; gx < GX; gx++) {
     var cell = { x: box.x + gx * cw, y: box.y + gy * ch, w: cw, h: ch };
     var a = geo.rectsOverlapArea(cell, it);
-    if (a > 0) grid[gy * GX + gx] += a / (cw * ch);
+    if (a > 0) grid[gy * GX + gx] += a / (cw * ch) * (fill || 1);
   }
 }
 

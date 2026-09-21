@@ -31,3 +31,14 @@ test("the fixture page lays out with a full banner heap and its free sticker", (
     assert.ok(page.placements[0].rot >= turn.min && page.placements[0].rot <= turn.max);
   }
 });
+
+test("sparse cutouts are packed until the paper is actually covered", async () => {
+  const { packBanner } = await import("../src/engine/collage.mjs");
+  const frag = (id, fill) => ({ id, fragmentId: id, src: `${id}.png`, weight: "medium", aspect: 1.2, fill,
+    contour: [[0, 0], [1, 0], [1, 1], [0, 1]] });
+  const box = { x: 0, y: 0, w: 360, h: 220 };
+  const solid = packBanner({ fragments: [frag("a"), frag("b")], box, density: 0.72, seed: "0x1" });
+  const sparse = packBanner({ fragments: [frag("a", 0.35), frag("b", 0.35)], box, density: 0.72, seed: "0x1" });
+  // Counting a mostly transparent cutout as solid stopped the heap with holes.
+  assert.ok(sparse.items.length > solid.items.length, `${sparse.items.length} vs ${solid.items.length}`);
+});
