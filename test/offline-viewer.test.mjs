@@ -31,7 +31,7 @@ test("an omitted recording produces no media URL and missing font or licence ref
 
 test("offline reader includes distinct Latin and Cyrillic faces and refuses missing coverage", () => {
   const doc = capsule();
-  doc.blocks[0].text = "Family recipe – Семейный рецепт";
+  doc.blocks[0].text = "Family recipe – Рецепт";
   const multi = { family: font.family, licencePath: font.licencePath, faces: [
     { path: "fonts/latin.woff2", style: "normal", weight: "400", unicodeRange: "U+0-024F,U+2000-206F" },
     { path: "fonts/cyrillic.woff2", style: "normal", weight: "400", unicodeRange: "U+0400-052F" },
