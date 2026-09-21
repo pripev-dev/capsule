@@ -71,3 +71,17 @@ canonical content; only the indexed files participate in integrity checking.
 
 Eight focused tests pass, including the real command's successful verify and
 restore paths, failed extracted-copy verification and unchanged source bytes.
+
+
+The reader accepts `font.faces` with local WOFF2 paths, styles, weights and
+Unicode ranges. A legacy single `font.path` still means one normal 400 face.
+All files and the licence must be included. Normal text coverage is checked
+against block text, marginal notes and every transcript version before HTML is
+written; invalid CSS descriptors and missing subsets refuse rendering.
+The browser loads faces using the actual page and transcript characters before
+revealing the main reading content. Declared ranges do not prove glyph quality;
+font files still need verified provenance and browser acceptance.
+
+A synthetic Latin/Cyrillic reader was checked offline in Chromium at 320px:
+both subsets loaded, no horizontal overflow and no console errors. This remains
+a semantic fallback, not acceptance of the composed layout or PDF export.

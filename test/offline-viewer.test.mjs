@@ -27,3 +27,23 @@ test("an omitted recording produces no media URL and missing font or licence ref
   doc.fonts[1].redistributable = false;
   assert.throws(() => offlineHtml({ capsule: doc, font, paths }), /licensed/);
 });
+
+
+test("offline reader includes distinct Latin and Cyrillic faces and refuses missing coverage", () => {
+  const doc = capsule();
+  doc.blocks[0].text = "Family recipe – Семейный рецепт";
+  const multi = { family: font.family, licencePath: font.licencePath, faces: [
+    { path: "fonts/latin.woff2", style: "normal", weight: "400", unicodeRange: "U+0-024F,U+2000-206F" },
+    { path: "fonts/cyrillic.woff2", style: "normal", weight: "400", unicodeRange: "U+0400-052F" },
+  ] };
+  const entries = [font.licencePath, ...multi.faces.map(f => f.path)];
+  const html = offlineHtml({ capsule: doc, font: multi, paths: entries });
+  assert.ok(html.includes("unicode-range:U+0400-052F"));
+  assert.ok(html.includes("../fonts/latin.woff2"));
+  assert.ok(html.includes("../fonts/cyrillic.woff2"));
+  assert.ok(html.includes("document.querySelector('#transcripts').textContent"));
+  assert.throws(() => offlineHtml({ capsule: doc, font: { ...multi, faces: multi.faces.slice(0, 1) }, paths: entries }), /cover/);
+  assert.throws(() => offlineHtml({ capsule: doc, font: multi, paths: entries.slice(0, 2) }), /licensed/);
+  const malicious = { ...multi, faces: [{ ...multi.faces[0], unicodeRange: "U+0-024F;}body{display:none" }] };
+  assert.throws(() => offlineHtml({ capsule: doc, font: malicious, paths: entries }), /licensed/);
+});
