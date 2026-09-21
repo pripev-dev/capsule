@@ -85,3 +85,11 @@ font files still need verified provenance and browser acceptance.
 A synthetic Latin/Cyrillic reader was checked offline in Chromium at 320px:
 both subsets loaded, no horizontal overflow and no console errors. This remains
 a semantic fallback, not acceptance of the composed layout or PDF export.
+
+
+An optional validated fragment manifest adds an attachment gallery for approved
+included raster images. Captions are escaped and included in font coverage.
+Direct cutouts and generated images have distinct labels. Source lineage and
+approval are checked; omitted files have no image URL. The gallery does not
+reconstruct composition placement, and media permission filtering remains the
+caller's responsibility before packaging.

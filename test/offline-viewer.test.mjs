@@ -47,3 +47,20 @@ test("offline reader includes distinct Latin and Cyrillic faces and refuses miss
   const malicious = { ...multi, faces: [{ ...multi.faces[0], unicodeRange: "U+0-024F;}body{display:none" }] };
   assert.throws(() => offlineHtml({ capsule: doc, font: malicious, paths: entries }), /licensed/);
 });
+
+
+test("offline visuals use only approved included paths and escape family captions", () => {
+  const doc = capsule();
+  const manifest = JSON.parse(readFileSync(new URL("../fixtures/minimal-valid/visual-fragments.json", import.meta.url)));
+  manifest.items[0].label.display = '<img onerror="unsafe">';
+  const path = manifest.items[0].alphaPngPath;
+  const html = offlineHtml({ capsule: doc, font, paths: [...paths, path], fragmentManifest: manifest });
+  assert.ok(html.includes(`src="../${path}"`));
+  assert.ok(html.includes("Direct cutout from family material"));
+  assert.ok(html.includes("&lt;img onerror=&quot;unsafe&quot;&gt;"));
+  assert.equal(html.includes(`src="../${manifest.items[1].alphaPngPath}"`), false);
+  const omitted = offlineHtml({ capsule: doc, font, paths, fragmentManifest: manifest });
+  assert.equal(omitted.includes("<img src="), false);
+  manifest.items[0].reviewDecision = "rejected";
+  assert.throws(() => offlineHtml({ capsule: doc, font, paths, fragmentManifest: manifest }), /approval/);
+});

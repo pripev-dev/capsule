@@ -1,7 +1,7 @@
 import { archivePath } from "./index.mjs";
 
 /** Explicit local faces only; never resolve a capsule URL or invent a fallback. */
-export function offlineFontCss(capsule, font, included) {
+export function offlineFontCss(capsule, font, included, extraText = "") {
   if (!font || !/^[a-zA-Z0-9 -]+$/.test(font.family) ||
       !capsule.fonts?.some(f => f.family === font.family && f.redistributable && !f.isSystemFont) ||
       !included.has(archivePath(font.licencePath))) {
@@ -34,7 +34,7 @@ export function offlineFontCss(capsule, font, included) {
   }).join("\n");
   const blockText = blocks => (blocks ?? []).flatMap(block => [block.text ?? "",
     ...(block.marks ?? []).map(mark => mark.note ?? ""), ...blockText(block.children)]);
-  const text = [...blockText(capsule.blocks), ...(capsule.transcripts ?? []).flatMap(t => t.segments.map(s => s.text))].join(" ");
+  const text = [extraText, ...blockText(capsule.blocks), ...(capsule.transcripts ?? []).flatMap(t => t.segments.map(s => s.text))].join(" ");
   if (!coverage.length || [...text].some(char => {
     const cp = char.codePointAt(0);
     return cp > 0x20 && !coverage.some(([from, to]) => cp >= from && cp <= to);
