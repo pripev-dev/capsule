@@ -93,3 +93,12 @@ Direct cutouts and generated images have distinct labels. Source lineage and
 approval are checked; omitted files have no image URL. The gallery does not
 reconstruct composition placement, and media permission filtering remains the
 caller's responsibility before packaging.
+
+
+`@pripev/capsule/archive/reading` assembles a reading ZIP from an explicitly
+permission-filtered payload and font descriptor. It preflights bounds and
+names before parsing, verifies document-reference hashes and sizes, validates
+cross-document closure, and adds `viewer/index.html`. Existing competing viewer
+files are refused. Payload bytes are preserved exactly. Two tests cover this
+assembly and its failure paths; all twelve archive/reader tests pass together.
+This is not the full M13 export: composed rendering and PDF remain outstanding.

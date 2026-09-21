@@ -35,15 +35,24 @@ function inventory(limits) {
   };
 }
 
+/** Preflight explicit payloads without allocating a temporary ZIP. */
+export function checkArchiveEntries(entries, limits = ARCHIVE_LIMITS) {
+  const check = inventory(limits);
+  for (const { path, bytes } of entries) {
+    if (!(bytes instanceof Uint8Array)) throw new Error("Archive bytes are required");
+    archivePath(path);
+    if ([INDEX, CHECKSUMS].includes(path.toLowerCase())) throw new Error("Reserved archive path");
+    check(path, bytes.length);
+  }
+  return check;
+}
+
 /** Deterministic ZIP containing only explicitly supplied, already authorised bytes. */
 export function createArchive(entries, limits = ARCHIVE_LIMITS) {
-  const check = inventory(limits);
+  const check = checkArchiveEntries(entries, limits);
   const files = Object.create(null);
   const records = [];
   for (const { path, bytes } of [...entries].sort((a, b) => a.path.localeCompare(b.path, "en"))) {
-    if (!(bytes instanceof Uint8Array)) throw new Error("Archive bytes are required");
-    if ([INDEX, CHECKSUMS].includes(path.toLowerCase())) throw new Error("Reserved archive path");
-    check(path, bytes.length);
     files[path] = new Uint8Array(bytes);
     records.push({ path, bytes: bytes.length, sha256: hash(bytes) });
   }

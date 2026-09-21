@@ -18,7 +18,8 @@
     "./fixtures/*": "./fixtures/*",
     "./archive": "./src/archive/index.mjs",
     "./archive/restore": "./src/archive/restore.mjs",
-    "./archive/viewer": "./src/archive/viewer.mjs"
+    "./archive/viewer": "./src/archive/viewer.mjs",
+    "./archive/reading": "./src/archive/reading.mjs"
   },
   "scripts": {
     "test": "node --test \"test/**/*.test.mjs\"",
