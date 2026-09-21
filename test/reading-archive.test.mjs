@@ -33,6 +33,8 @@ test("reading archive validates documents and contains its independent offline r
   assert.ok(verifyArchive(zip));
   const files = unzipSync(zip);
   assert.ok(Buffer.from(files["viewer/index.html"]).toString().includes("This is an offline reading copy"));
+  assert.deepEqual(Buffer.from(files["schemas/capsule.schema.json"]), readFileSync(new URL("../schemas/capsule.schema.json", import.meta.url)));
+  assert.ok(Buffer.from(files["README.txt"]).toString().includes("Never overwrite your source copy"));
   for (const entry of entries) assert.deepEqual(Buffer.from(files[entry.path]), entry.bytes);
   assert.deepEqual(createReadingArchive(entries, font), zip);
 });

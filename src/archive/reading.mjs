@@ -1,10 +1,12 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { createArchive, checkArchiveEntries } from "./index.mjs";
 import { offlineHtml } from "./viewer.mjs";
-import { validate, checkAll } from "../validate/index.mjs";
+import { validate, checkAll, SCHEMA_DIR } from "../validate/index.mjs";
 
 /** Assemble a reading fallback from an already permission-filtered payload.
- * No filesystem reads, hosted credentials, URL fetching or authority decisions.
+ * Reads only fixed package-owned schemas, never caller paths or hosted state.
  */
 export function createReadingArchive(entries, font, limits) {
   // Validate names, collisions and bounds before parsing any document.
@@ -44,5 +46,34 @@ export function createReadingArchive(entries, font, limits) {
     }
   }
   const html = offlineHtml({ capsule, fragmentManifest, font, paths: [...files.keys()] });
-  return createArchive([...entries, { path: "viewer/index.html", bytes: Buffer.from(html) }], limits);
+  const schemas = ["capsule", "common", "evidence-map", "preservation-manifest", "visual-fragment-manifest"].map(name => ({
+    path: `schemas/${name}.schema.json`, bytes: readFileSync(join(SCHEMA_DIR, `${name}.schema.json`)),
+  }));
+  const instructions = Buffer.from(`Pripev offline reading copy
+
+Extract the entire archive and keep its folders together. Open viewer/index.html
+in a browser. No hosted account or network connection is required for reading.
+A font warning means the reading copy has not rendered correctly.
+
+capsule.json retains the canonical words, source references and composition
+intent. Schemas are in schemas/. The reader is a plain reading fallback;
+it does not reproduce the composed layout or supply a finished PDF.
+Media deliberately omitted from this copy is described in capsule.json.
+Direct cutouts and generated images remain distinct in the visual manifest.
+
+checksums.sha256 covers each payload and archive.json. Verify every listed
+file before relying on a restored copy. Checksums detect corruption; they do
+not authenticate an archive whose contents and checksums were both replaced.
+The Capsule archive verifier also checks for extra files and unsafe paths.
+Restore into a new empty location. Never overwrite your source copy.
+
+This copy contains the material its requester was permitted to export at the
+time of preparation. It does not grant publication rights or hosted access.
+Keep private family material private. Local copies are not remotely revocable.
+The archive is plaintext; protect it as you would the original recordings.
+A download does not replace the hosted preservation and backup obligations.
+`);
+  return createArchive([...entries, ...schemas,
+    { path: "README.txt", bytes: instructions },
+    { path: "viewer/index.html", bytes: Buffer.from(html) }], limits);
 }

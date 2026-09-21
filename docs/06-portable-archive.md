@@ -107,3 +107,11 @@ Included source and visual bytes are also checked against their canonical
 references before packaging. A self-consistent ZIP checksum cannot make a
 substituted recording match the original capsule hash. A focused regression
 covers that distinction; deliberately omitted media remain omitted.
+
+
+Reading archives include the five matching package schemas and static recovery
+instructions. Schema bytes are copied from fixed package paths, never from a
+capsule-supplied path or URL. Instructions distinguish canonical content from
+the reader, explain corruption checking and restoration into a new location,
+and make no claim that downloading grants publication rights or fulfils backup
+obligations. Schema byte equality is checked in the assembly test.
