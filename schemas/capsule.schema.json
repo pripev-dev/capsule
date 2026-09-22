@@ -978,6 +978,97 @@
               "detail":  { "type": "string" }
             }
           }
+        },
+
+        "designRationale": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "authoredBy"],
+          "description":
+            "Why this page looks the way it does. The composition's `intent.tokens` records WHAT was chosen - which fontId for which role, which hex for paper and ink; this records what that choice was made FROM, and it is the difference between a palette and a preset. A colour must be traceable to the family's own material or the family's own testimony, and the trace has to be checkable by a machine rather than asserted in prose.",
+          "properties": {
+            "source": {
+              "enum": ["sampled", "borrowed-from-sibling-page", "reasoned-from-testimony",
+                       "none-achromatic", "deterministic-proposal"],
+              "description":
+                "Where the colour came from, in descending order of evidence. `sampled` is required whenever anything was photographed: reasoning past a family's actual light is a worse failure than having none. `none-achromatic` has chroma exactly zero and remains the honest answer when nothing supports a hue - including when a citation was offered and refused."
+            },
+            "authoredBy": {
+              "enum": ["agent", "deterministic", "replayed"],
+              "description":
+                "`replayed` is a committed recording of an earlier agent run, re-validated on the way in. Labelling a replay as `agent` is the one lie this field exists to make unavailable."
+            },
+            "replayedFrom": {
+              "type": ["string", "null"],
+              "description": "The design key of the recording replayed, when authoredBy is `replayed`."
+            },
+            "departsFromProposal": {
+              "type": "string",
+              "description": "What the agent changed about the deterministic proposal, and why. Empty when it accepted it."
+            },
+            "structureBecause": { "type": "string" },
+            "marksBecause": { "type": "string" },
+            "typeReasons": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["role", "fontId", "because"],
+                "properties": {
+                  "role":   { "enum": ["display", "text", "accent", "caption"] },
+                  "fontId": { "$ref": "common.schema.json#/$defs/fontId" },
+                  "because": { "type": "string", "minLength": 1 },
+                  "substituted": {
+                    "type": "boolean",
+                    "description": "A script this face does not cover fell back to the text face, and the page says so rather than rendering a system font."
+                  }
+                }
+              }
+            },
+            "colourRoles": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["role", "storedHex", "because", "citations"],
+                "properties": {
+                  "role": { "type": "string", "minLength": 1,
+                            "description": "paperTint, ink, or accent-N." },
+                  "requestedHex": {
+                    "$ref": "common.schema.json#/$defs/hexColor",
+                    "description": "What was asked for, before the engine's contrast retune. Kept beside the stored value so the difference between an editorial choice and a legibility correction stays visible."
+                  },
+                  "storedHex": { "$ref": "common.schema.json#/$defs/hexColor" },
+                  "contrastRatio": { "type": "number", "minimum": 1 },
+                  "because": { "type": "string", "minLength": 1 },
+                  "citations": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "At least one, always. A colour with no citation is a colour from nowhere, which is the thing this object exists to prevent.",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["kind"],
+                      "properties": {
+                        "kind": { "enum": ["fragment-swatch", "transcript-span", "locale", "sibling-page"] },
+                        "fragmentId": { "$ref": "common.schema.json#/$defs/fragmentId" },
+                        "swatchId": { "type": "string" },
+                        "transcriptId": { "$ref": "common.schema.json#/$defs/transcriptId" },
+                        "charStart": { "type": "integer", "minimum": 0 },
+                        "charEnd": { "type": "integer", "minimum": 0 },
+                        "quote": {
+                          "type": "string",
+                          "description": "The cited words, verbatim. It costs bytes and buys the offline promise: a reader with no database can check a colour's stated reason against the transcript, which is the same trade evidence-map.schema.json already makes."
+                        },
+                        "locale": { "$ref": "common.schema.json#/$defs/locale" },
+                        "capsuleId": { "$ref": "common.schema.json#/$defs/capsuleId" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
