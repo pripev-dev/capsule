@@ -12,8 +12,10 @@ manifest V2, the ported engine and the privacy guard have **124 tests**. On a
 clean public clone 114 are runnable and 10 skip - those 10 replay the private Design
 export and say so rather than failing. Several more skip anywhere git is
 unavailable, because they ask git how it classifies or enumerates the tracked
-files. The offline viewer remains later work; so does
-the renderer, which is deliberately still in the Stage 1 export rather than in
+files. M13 now adds verified ZIP packaging, non-destructive restore, standalone
+verification and a minimal offline reading fallback in `src/archive/`; see
+`docs/06-portable-archive.md` for tested scope and limits. The composed renderer
+remains later work, which is deliberately still in the Stage 1 export rather than in
 this repository. Nothing here may be described as working
 until its test is green.
 
