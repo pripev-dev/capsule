@@ -12,6 +12,7 @@ import * as T from "./textlayout.mjs";
 import * as C from "./collage.mjs";
 import * as M from "./marks.mjs";
 import * as P from "./paper.mjs";
+import { presentationPage } from "./presentation.mjs";
 
 // engine/layout.js - one composed surface, computed.
 //
@@ -153,7 +154,7 @@ function matchesScript(text, script) {
 }
 
 function composeSurface(input) {
-  var capsule = input.capsule, surface = input.surface, measure = input.measure;
+  var capsule = presentationPage(input.capsule), surface = input.surface, measure = input.measure;
   var comp = capsule.compositions[0], intent = comp.intent;
   var tok = intent.tokens, seed = intent.scatterSeed;
   var mirror = !!input.mirror, rtl = !!input.rtl;
@@ -578,6 +579,50 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
     var kind = block.type;
     blockY[block.blockId] = y;
 
+    if (kind === 'editorial-group') {
+      var ed = block.editorial;
+      var available = ctx.measure != null ? ctx.measure : colW - indent;
+      var groupInset = ctx.inset || 0;
+      var framed = ['panel', 'story', 'register'].includes(ed.treatment);
+      var space = ed.spacing === 'roomy' ? 1.5 : ed.spacing === 'compact' ? 0.6 : 1;
+      y += sz.gap * space;
+      var panelTop = y, panelPad = framed ? Math.min(sz.body * 0.85, available * 0.07) : 0;
+      var panel = { blockId:block.blockId, type:kind, kind:'container', containerOf:framed ? 'story' : 'list',
+        depth:depth, block:block, ground:ed.treatment === 'story' ? 0.055 : 0.028,
+        openingRule:framed, box:{x:colX+indent,y:y,w:available,h:0} };
+      items.push(panel);
+      y += panelPad;
+      var listKind = ed.treatment === 'sequence' ? 'number' : ed.treatment === 'set' ? 'bullet' : null;
+      var groupGutter = listKind ? sz.body * 1.7 : 0;
+      var groupChildren = block.children || [];
+      var registerCols = 1, registerGap = sz.body;
+      var registerWidth = available-panelPad*2;
+      if (ed.treatment === 'register' && groupChildren.every(c=>!c.children?.length && c.text?.length<=80)) {
+        var longestRegister = Math.max(1,...groupChildren.map(c=>measure(c.text,fonts[c.editorial?.fontRole || ed.fontRole])*sz.body/100));
+        registerCols = Math.min(3,groupChildren.length,Math.max(1,Math.floor((registerWidth+registerGap)/(Math.max(sz.body*12,longestRegister)+registerGap))));
+      }
+      var registerTop=y, registerBottom=y, registerPer=Math.ceil(groupChildren.length/registerCols);
+      var registerColumnWidth=(registerWidth-registerGap*(registerCols-1))/registerCols;
+      groupChildren.forEach(function(child, index) {
+        var column=Math.floor(index/registerPer);
+        if (registerCols>1 && index%registerPer===0) y=registerTop;
+        emit(child, depth, {inset:groupInset+panelPad+groupGutter,
+          ...(registerCols>1 ? {inset:groupInset+panelPad+column*(registerColumnWidth+registerGap)} : {}),
+          measure:registerCols>1 ? registerColumnWidth : available-panelPad*2-groupGutter,
+          gutterX:colX+indent+panelPad, marker:listKind ? {kind:listKind,index:index+1} : null,
+          markerWidth:groupGutter, itemGap:sz.body*0.42,
+          editorial:ed, story:ed.treatment === 'story', first:index === 0});
+        registerBottom=Math.max(registerBottom,y);
+      });
+      y=registerBottom;
+      y += panelPad;
+      panel.box.h = y-panelTop;
+      keepTogether(items.indexOf(panel),panel.box);
+      blockY[block.blockId]=panel.box.y;
+      y += sz.gap*space;
+      return;
+    }
+
     if (kind === 'divider') {
       y = advancePastBreak(y, sz.gap * 1.4);
       items.push({ blockId: block.blockId, type: kind, kind: 'rule', depth: depth,
@@ -751,9 +796,17 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
 
     var size = role === 'display' ? sz.display : role === 'section' ? sz.section
              : role === 'caption' ? sz.caption : sz.body;
+    var editorial = block.editorial || ctx.editorial;
+    if (editorial) {
+      if (editorial.treatment === 'section') { size=sz.section; role='section'; }
+      if (editorial.treatment === 'lead') size=sz.body*1.18;
+      if (editorial.treatment === 'caption') size=sz.caption;
+    }
     var roleSpec = fonts[role === 'display' ? 'display' : role === 'section' ? 'display'
                        : role === 'accent' ? 'accent' : role === 'caption' ? 'caption' : 'text'] || fonts.text;
+    if (editorial) roleSpec=fonts[editorial.fontRole];
     var spec = specFor(roleSpec, block.text);
+    if (editorial) spec={...spec,style:editorial.emphasis,key:spec.key+'/'+editorial.emphasis};
     var leading = size * (role === 'display' ? 1.06 : role === 'section' ? 1.2 : sz.lead / sz.body)
                 * (ctx.leadingScale || 1);
     var before = ctx.itemGap != null ? ctx.itemGap
@@ -827,7 +880,7 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
                  size: size, spec: spec, lines: laid.lines, block: block, rtl: blockRtl,
                  story: !!ctx.story, firstOfStory: !!ctx.first,
                  marker: ctx.marker ? { kind: ctx.marker.kind, index: ctx.marker.index,
-                                        x: markerX, w: gut, y: markerY, h: leading } : null,
+                                        x: markerX, w: ctx.markerWidth || gut, y: markerY, h: leading } : null,
                  box: { x: x0, y: y, w: ownW, h: laid.bottom - y } });
     y = laid.bottom;
     (block.children || []).forEach(function (c) { emit(c, depth + 1); });

@@ -755,6 +755,21 @@
               }
             },
             "scatterSeed": { "type": "string", "pattern": "^0x[0-9a-f]{4,16}$" },
+            "blockTreatments": {
+              "type": "array",
+              "description": "Revision 3: editorial treatments refer to content blocks without carrying text or coordinates. The engine resolves these named treatments responsively.",
+              "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["blockId", "treatment", "fontRole", "emphasis", "spacing"],
+                "properties": {
+                  "blockId": { "$ref": "common.schema.json#/$defs/blockId" },
+                  "treatment": { "enum": ["body", "lead", "section", "caption", "aside", "plain", "panel", "story", "sequence", "set", "register"] },
+                  "fontRole": { "enum": ["display", "text", "accent", "caption"] },
+                  "emphasis": { "enum": ["normal", "italic"] },
+                  "spacing": { "enum": ["compact", "regular", "roomy"] }
+                }
+              }
+            },
             "tokens": {
               "type": "object",
               "additionalProperties": false,
