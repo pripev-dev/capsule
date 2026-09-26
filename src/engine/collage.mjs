@@ -6,19 +6,16 @@ import * as geo from "./geometry.mjs";
 // The skill says which fragments, how dense, and with what seed. This file
 // decides where. It never reads a label and never chooses a fragment.
 //
-// The banner is filled by coverage, not by a formula: an occupancy grid records
-// what is still empty and each new piece is aimed at the emptiest cell. That is
-// why it fills convincingly with eleven fragments, with four, and with one -
-// with one it simply repeats it until the rectangle is full.
+// The banner is arranged by coverage, not by a row formula: an occupancy grid
+// records what is still empty and each new piece is aimed at the emptiest cell.
+// Every selected fragment is a physical editorial choice and appears once. A
+// sparse selection leaves visible paper instead of manufacturing copies of a
+// family image.
 //
 // TWO THINGS THIS FILE IS RESPONSIBLE FOR NOT DOING.
 //
-// It must not spend the heap on one kind. Aiming each piece at the emptiest cell
-// while walking the deck in index order means the first fragment lands wherever
-// the biggest hole is, every time, and a rectangle can be filled by one cutout
-// before the second is ever reached. The deck is therefore drawn from by USE,
-// not by index: the least-used kind goes next, ties broken by weight and then at
-// random, so every kind is on the sheet before any kind comes back.
+// It must not turn one kind into wallpaper. The deck is drawn by weight and a
+// seeded tie break, and every member is exhausted after one placement.
 //
 // And the body scatter must be random where it says it is random. An anchor
 // block with a left/right formula is not a scatter, it is a two-column figure
@@ -37,43 +34,36 @@ function packBanner(opts) {
   if (!frags.length) return { items: [], coverage: 0 };
   var r = rng.stream(opts.seed, 'banner');
   var GX = 7, GY = 5, grid = new Float64Array(GX * GY);
-  // The heap is packed to OVERFILL, not to coverage. A rectangle whose every
-  // cell is covered once is four photographs laid side by side, which is a
-  // contact sheet: the thing a family makes is a pile, where pieces sit on each
-  // other and the ones underneath show at their corners. So the target is more
-  // than one - each cell is aimed at until it has been covered roughly one and a
-  // half to two and a half times over - and the pieces that arrive later come in
-  // smaller, so the heap gets chinked rather than restacked.
-  var target = 1.15 + density * 1.15;
+  // Density changes the scale, overlap and rotation of the selected pieces. It
+  // never changes their count: repeating an approved fragment turns a collage
+  // into wallpaper and overstates the family's source material.
+  var target = 0.62 + density * 0.75;
   // How much of its own box each cutout actually covers. A string of sweets on
   // a transparent ground fills a third of its rectangle; counting the whole
   // rectangle as paper left a heap of them full of holes. A fragment that does
   // not say is taken as solid, so older capsules pack exactly as before.
   var fillOf = function (f) { return f.fill > 0 && f.fill <= 1 ? Math.max(0.25, f.fill) : 1; };
-  var meanFill = frags.reduce(function (sum, f) { return sum + fillOf(f); }, 0) / frags.length;
-  var maxItems = Math.round((14 + density * 30) / Math.max(0.5, meanFill));
-  // And the pieces are sized for the heap they are in, from the geometry rather
-  // than from a constant. A cutout most of the banner's height is a photograph,
-  // not a sticker: four of them fill any rectangle and stop, which is how a heap
-  // of eleven ends up looking like a contact sheet of four. So the average piece
-  // is sized to the area one piece must carry if `maxItems` of them are to cover
-  // the rectangle `target` times over - which means a tall narrow banner and a
-  // long thin one both fill, without either being a case.
-  var baseArea = box.w * box.h * target / maxItems;
+  var maxItems = frags.length;
+  // Size the unique pieces by their actual visible contribution. A sparse motif
+  // receives a larger box than a solid photograph, while a heavy piece carries
+  // more of the composition than a light accent.
+  var capacity = frags.reduce(function (sum, f) {
+    var weight = WEIGHT_AREA[f.weight] || 1;
+    return sum + fillOf(f) * weight * weight;
+  }, 0);
+  var baseArea = box.w * box.h * target / Math.max(0.2, capacity);
   var items = [], guard = 0;
 
-  // Heaviest first so the light pieces land on top of them - but the order the
-  // deck is DRAWN in is by use, not by index.
+  // Heaviest first so the light pieces land on top of them. Equal weights keep
+  // a seeded tie break so two capsules do not settle into the same composition.
   var deck = frags.slice().sort(function (a, b) { return wRank(b) - wRank(a); });
   var timesUsed = {};
   deck.forEach(function (f) { timesUsed[f.id] = 0; });
-  // No kind may take more than its share of the heap, so a wide cutout that
-  // happens to cover a lot of grid cannot become the wallpaper either.
-  var perKindCap = Math.max(2, Math.ceil(maxItems / deck.length) + 1);
+  var perKindCap = 1;
 
   function drawNext() {
     var eligible = deck.filter(function (f) { return timesUsed[f.id] < perKindCap; });
-    if (!eligible.length) eligible = deck;
+    if (!eligible.length) return null;
     var least = Infinity;
     eligible.forEach(function (f) { if (timesUsed[f.id] < least) least = timesUsed[f.id]; });
     var pool = eligible.filter(function (f) { return timesUsed[f.id] === least; });
@@ -82,19 +72,16 @@ function packBanner(opts) {
     return heavy[Math.floor(r() * heavy.length) % heavy.length];
   }
 
-  var lastOf = {};
   while (items.length < maxItems && guard++ < 900) {
     var minIdx = 0;
     for (var g = 1; g < grid.length; g++) if (grid[g] < grid[minIdx]) minIdx = g;
-    if (grid[minIdx] >= target) break;
     var gx = minIdx % GX, gy = Math.floor(minIdx / GX);
     var f = drawNext();
+    if (!f) break;
     timesUsed[f.id]++;
     var wRel = WEIGHT_AREA[f.weight] || 1;
-    // Later passes come in smaller: the heap gets chinked, not restacked.
-    var decay = 1 - Math.min(0.42, items.length * 0.012);
     var h = Math.sqrt(baseArea * wRel * wRel / Math.max(0.2, f.aspect))
-            * rng.range(r, 0.84, 1.2) * decay;
+            * rng.range(r, 0.84, 1.2);
     h = Math.max(box.h * 0.13, Math.min(box.h * 0.98, h));
     var w = h * f.aspect;
     // A very wide cutout is scaled to the rectangle rather than allowed past it.
@@ -106,28 +93,11 @@ function packBanner(opts) {
     // A cutout may lean off the edge on a screen, but only by a little. A
     // printed sheet has a real edge, and nothing is allowed past it.
     var bleed = opts.allowBleed === false ? 0 : Math.min(box.w, box.h) * 0.018;
-    // A repeat has to look like another piece of the same thing, not like a
-    // duplicated file: a piece placed again comes in at a clearly different size,
-    // turned the other way, and never touching its own previous copy. Its size
-    // is settled before it is placed, so the placement is clamped once, against
-    // the size it actually has.
-    var prev = lastOf[f.id];
-    if (prev) {
-      var ratio = h / prev.h;
-      if (ratio > 0.78 && ratio < 1.28) { h *= (r() < 0.5 ? 0.62 : 1.42); w = h * f.aspect; }
-      if (w > wMax) { w = wMax; h = w / f.aspect; }
-      if (rot * prev.rot > 0) rot = -rot;
-    }
     var x = Math.max(box.x - bleed, Math.min(cx - w / 2, box.x + box.w - w + bleed));
     var y = Math.max(box.y - bleed, Math.min(cy - h / 2, box.y + box.h - h + bleed));
-    if (prev) {
-      var dx = (x + w / 2) - (prev.x + prev.w / 2), dy = (y + h / 2) - (prev.y + prev.h / 2);
-      if (Math.hypot(dx, dy) < Math.min(prev.w, prev.h) * 0.7) { continue; }
-    }
     var item = { fragmentId: f.id, src: f.src, x: x, y: y, w: w, h: h,
                  rot: rot, z: items.length, weight: f.weight, mode: f.mode, label: f.label };
     items.push(item);
-    lastOf[f.id] = item;
     stamp(grid, GX, GY, box, item, fillOf(f));
   }
   var cov = 0; for (var i = 0; i < grid.length; i++) cov += Math.min(1, grid[i]);
