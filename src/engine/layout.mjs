@@ -374,7 +374,16 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
     var titleTop = box.y + sizes.gap * 1.15;
     var titleH = sizes.display * 1.1, longest = measureW;
     if (titleBlock && measure) {
-      var laid = T.layout(T.prepare(titleBlock.text || '', fonts.display || fonts.text, measure), {
+      var preparedTitle = T.prepare(titleBlock.text || '', fonts.display || fonts.text, measure);
+      // The rag is a preference; an intact word is a constraint. Cyrillic and
+      // other scripts regularly carry words wider than the nominal 74% title
+      // measure on a phone. Let that one line use more of the column before
+      // declaring an overflow or changing the family's title.
+      var widestWord = preparedTitle.atoms.reduce(function (m, atom) {
+        return atom.space ? m : Math.max(m, atom.w * sizes.display);
+      }, 0);
+      measureW = Math.min(colW, Math.max(measureW, widestWord));
+      var laid = T.layout(preparedTitle, {
         size: sizes.display, leading: 1.06, y: 0, minLine: sizes.display * 2,
         shapeFor: function () { return [[0, measureW]]; }
       });
