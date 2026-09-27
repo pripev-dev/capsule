@@ -122,6 +122,16 @@ test("a screen surface is never held to the print rules", () => {
   assert.deepEqual(r.findings.filter((f) => f.code === "pagination"), []);
 });
 
+test("a long Cyrillic title keeps whole words inside a phone measure", () => {
+  const title = "\u043a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0430\u044f " +
+    "\u0448\u0430\u0440\u043b\u043e\u0442\u043a\u0430";
+  const cap = capsule([{ blockId: "blk_title", type: "title", text: title }]);
+  const { model, report: r } = report({ kind: "screen", w: 390, h: 844 }, cap);
+  const titleItem = model.flow.find((item) => item.blockId === "blk_title");
+  assert.ok(titleItem?.lines?.length > 0);
+  assert.deepEqual(r.findings.filter((f) => f.code === "overflow"), []);
+});
+
 // --- pagination --------------------------------------------------------------
 
 test("a print surface reports what the sheets actually came out like", () => {
