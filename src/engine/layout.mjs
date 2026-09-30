@@ -235,8 +235,14 @@ function composeSurface(input) {
     ? banner.box.y + gapUnit * 1.15
     : banner.box.y + banner.box.h + gapUnit * 1.35;
 
+  // A typographic opening is a torn ground with the title on it and a rule
+  // under the title. Words after it start below that ground, not on it: on
+  // paper, where the player is left off, the rule ran through the first
+  // sentence (30 September).
+  var opening = banner.typographic ? banner.box.y + banner.box.h : null;
+
   // Pass A: where do the blocks fall with nothing in the way.
-  var passA = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, [], page, measure, rtl, banner.titleMeasure);
+  var passA = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, [], page, measure, rtl, banner.titleMeasure, opening);
 
   // The engine turns the skill's anchors into rectangles, now that it knows
   // where the anchored blocks are.
@@ -257,9 +263,10 @@ function composeSurface(input) {
     lead: sizes.lead, bodyBottom: passA.bottom, keepOut: reservedGutters,
     gutter: Math.max(6, body * 0.55), mirror: mirror
   }).filter(function (p) { return surface.kind !== 'print' || p.y < passA.bottom; });
+  if (page) placements.forEach(function (p) { onOneSheet(p, page); });
 
   // Pass B: the same text, wrapped round the real contours.
-  var passB = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, placements, page, measure, rtl, banner.titleMeasure);
+  var passB = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, placements, page, measure, rtl, banner.titleMeasure, opening);
 
   var built = buildMarks(passB, tok, seed);
   var legendRows = (capsule.legend || []).length
@@ -420,6 +427,27 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
            edge: P.tornRect(bbox, seed + '/banner'), title: titleBlock ? titleBlock.text : '' };
 }
 
+// A photograph is never cut by a sheet break. The scatter places a cutout by
+// the words it belongs beside and knows nothing of paper, so on a print surface
+// one that crosses a break - or reaches into the foot band the folio prints in -
+// is slid, whole, onto the sheet that already holds most of it. Otherwise the
+// renderer's slicing prints its top half at the foot of one sheet and its
+// bottom half at the head of the next. A cutout taller than a sheet's content
+// band is left where it is: no position fixes that, and the audit reports it.
+function onOneSheet(p, page) {
+  if (p.h > page.h) return;
+  var sheet = function (yy) { return Math.floor((yy - page.top) / page.stride); };
+  var a = sheet(p.y), b = sheet(p.y + p.h);
+  var bandTop = function (s) { return page.top + s * page.stride; };
+  if (a === b && p.y + p.h <= bandTop(a) + page.h && p.y >= bandTop(a)) return;
+  var above = Math.max(0, Math.min(p.y + p.h, bandTop(a) + page.h) - p.y);
+  var s = above >= p.h / 2 ? a : a + 1;
+  var y = Math.max(bandTop(s), Math.min(p.y, bandTop(s) + page.h - p.h));
+  var dy = y - p.y;
+  p.y = y;
+  if (p.poly) p.poly = p.poly.map(function (pt) { return [pt[0], pt[1] + dy]; });
+}
+
 // What a reserved block actually needs. The transcript attached to the player is
 // her whole recording, so its height is measured with the same measurer the body
 // text uses rather than assumed.
@@ -480,7 +508,7 @@ var LIST_MARKER = { checklist: 'checkbox', 'ordered-list': 'number', 'bullet-lis
 // mirrored edition cannot reorder her sentence and an unmirrored one cannot
 // straighten an Arabic one. The collage still mirrors surface-wide - that is a
 // physical arrangement and belongs to the reader, not to her words.
-function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measure, editionRtl, titleMeasure) {
+function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measure, editionRtl, titleMeasure, openingBottom) {
   var items = [], blockY = {}, y = top;
   var blocks = capsule.blocks || [];
 
@@ -561,10 +589,12 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
   // Keep a whole container on one sheet when one sheet can hold it. A list or a
   // story that is simply taller than the paper is not a keep failure, it is a
   // long list, and it breaks where the line rules say it may.
-  function keepTogether(from, box, holeShare) {
-    if (!page || box.h <= 0 || box.h > usableSheet()) return false;
-    if (sheetOf(box.y) === sheetOf(box.y + box.h - 1)) return false;
-    var dy = nextSheetTop(box.y) - box.y;
+  //
+  // Where the next sheet starts, or null when the box should stay where it is.
+  function keptTop(box, holeShare) {
+    if (!page || box.h <= 0 || box.h > usableSheet()) return null;
+    if (sheetOf(box.y) === sheetOf(box.y + box.h - 1)) return null;
+    var top = nextSheetTop(box.y);
     // A keep leaves a hole the size of what it moved past, and a keep is only
     // worth having if that hole is smaller than the break it prevented. Past
     // roughly a quarter of the sheet the cook is turning a mostly-blank page,
@@ -575,13 +605,84 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
     // a banner that has already taken most of it, and an index the reader has to
     // turn the sheet to finish reading is the one thing it exists not to be. So
     // its caller asks for a larger allowance, and the rule stays a rule.
-    if (dy > page.h * (holeShare != null ? holeShare : 0.28)) return false;
-    if (!clearToShift(from, dy)) return false;
-    shiftFrom(from, dy);
+    return top - box.y > page.h * (holeShare != null ? holeShare : 0.28) ? null : top;
+  }
+  // The index's registers are short columns with no breaks inside them, so a
+  // register can be moved as it was laid.
+  function keepTogether(from, box, holeShare) {
+    var top = keptTop(box, holeShare);
+    if (top == null || !clearToShift(from, top - box.y)) return false;
+    shiftFrom(from, top - box.y);
     return true;
   }
 
+  // A container is SET AGAIN on the next sheet, never moved there. Moving it
+  // carried every hole its first setting had made: a paragraph pushed past the
+  // old break by the orphan rule arrived on the new sheet with the break's gap
+  // still above it, and a printed recipe had a quarter-sheet of nothing between
+  // step one and step two (29 September, the first Ctrl+P the owner tried).
+  // Setting it again also wraps it round the photographs actually on the new
+  // sheet rather than the ones where it started.
   function emit(block, depth, ctx) {
+    var from = items.length, y0 = y;
+    emitBlock(block, depth, ctx);
+    var c = items[from];
+    if (!page || !c || c.kind !== 'container' || c.blockId !== block.blockId) return;
+    var top = ctx && ctx.relaid ? null : keptTop(c.box, c.containerOf === 'head' ? 0.3 : null);
+    if (top != null) {
+      items.length = from;
+      y = top - (c.box.y - y0);
+      emitBlock(block, depth, Object.assign({}, ctx, { relaid: true }));
+      c = items[from];
+    }
+    startWithContent(c, from);
+  }
+  // A container too tall to move whose first child was pushed overleaf anyway -
+  // a heading keeping with its lines - would otherwise open with a strip of its
+  // ground at the foot of the sheet before, holding nothing.
+  function startWithContent(c, from) {
+    var first = items[from + 1];
+    if (!first || !first.box || sheetOf(first.box.y) <= sheetOf(c.box.y)) return;
+    var top = page.top + sheetOf(first.box.y) * page.stride;
+    c.box.h -= top - c.box.y;
+    c.box.y = top;
+    blockY[c.blockId] = top;
+  }
+
+  // A heading goes with what it introduces. Its own keep asks for room for the
+  // first lines after it, but when what follows is a container that the keep
+  // above sets on the next sheet, the heading is left alone at the foot of this
+  // one: a heading for nothing, and a sheet that ends on a promise. So a heading
+  // whose follower opens on a later sheet is set again with it, over there.
+  function firstLineFrom(index) {
+    for (var i = index; i < items.length; i++) {
+      if (items[i].lines && items[i].lines.length) return items[i].lines[0].y;
+    }
+    return null;
+  }
+  function emitRun(list, one) {
+    for (var i = 0; i < list.length; i++) {
+      var from = items.length, y0 = y;
+      one(list[i], i);
+      var head = items[from];
+      if (!page || i + 1 >= list.length || !head || head.kind !== 'text' || !head.lines.length ||
+          (head.role !== 'section' && head.role !== 'display')) continue;
+      var mark = items.length;
+      one(list[i + 1], i + 1);
+      var headSheet = sheetOf(head.lines[head.lines.length - 1].y);
+      var opens = firstLineFrom(mark);
+      var atTop = head.box.y - (page.top + headSheet * page.stride) < sz.body;
+      if (opens != null && sheetOf(opens) > headSheet && !atTop) {
+        items.length = from;
+        y = nextSheetTop(head.box.y) - (head.box.y - y0);
+        one(list[i], i);
+        one(list[i + 1], i + 1);
+      }
+      i++;
+    }
+  }
+
+  function emitBlock(block, depth, ctx) {
     ctx = ctx || {};
     var indent = depth * sz.body * 1.6 + (ctx.inset || 0);
     var role = TEXT_TYPES[block.type] || 'text';
@@ -612,7 +713,8 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
       }
       var registerTop=y, registerBottom=y, registerPer=Math.ceil(groupChildren.length/registerCols);
       var registerColumnWidth=(registerWidth-registerGap*(registerCols-1))/registerCols;
-      groupChildren.forEach(function(child, index) {
+      var eachChild = registerCols > 1 ? function(list, one) { list.forEach(one); } : emitRun;
+      eachChild(groupChildren, function(child, index) {
         var column=Math.floor(index/registerPer);
         if (registerCols>1 && index%registerPer===0) y=registerTop;
         emit(child, depth, {inset:groupInset+panelPad+groupGutter,
@@ -626,7 +728,6 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
       y=registerBottom;
       y += panelPad;
       panel.box.h = y-panelTop;
-      keepTogether(items.indexOf(panel),panel.box);
       blockY[block.blockId]=panel.box.y;
       y += sz.gap*space;
       return;
@@ -669,10 +770,10 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
                          itemGap: sz.body * (kind === 'checklist' ? 0.5 : 0.42),
                          measure: colW - indent - gutter });
       });
-      container.box.h = Math.max(0, y - listTop);
       // A sequence the cook is meant to follow is one object: eight steps split
-      // 7/1 across a break is worse than eight steps starting overleaf.
-      if (keepTogether(items.indexOf(container), container.box)) listTop = container.box.y;
+      // 7/1 across a break is worse than eight steps starting overleaf. `emit`
+      // sets it again on the next sheet when that is the better break.
+      container.box.h = Math.max(0, y - listTop);
       blockY[block.blockId] = listTop;
       y += sz.gap * 0.9;
       return;
@@ -747,9 +848,8 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
       hc.box.h = Math.max(0, y - headTop);
       // The index breaks between registers and never through one, which the
       // per-register keeps above have already seen to. The container itself is
-      // moved whole only when that costs the reader little: past about a third of
-      // a sheet the hole is worse than the break.
-      if (keepTogether(items.indexOf(hc), hc.box, 0.3)) headTop = hc.box.y;
+      // set on the next sheet (by `emit`) only when that costs the reader little:
+      // past about a third of a sheet the hole is worse than the break.
       blockY[block.blockId] = headTop;
       y += sz.gap * 1.4;
       return;
@@ -780,8 +880,7 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
       y += storyPad;
       sc.box.h = Math.max(0, y - storyTop);
       // A story is set on its own paper. Half a sheet of paper at the foot of a
-      // page is a printing accident, not an aside.
-      if (keepTogether(items.indexOf(sc), sc.box)) storyTop = sc.box.y;
+      // page is a printing accident, not an aside - `emit` sees to it.
       blockY[block.blockId] = storyTop;
       y += sz.gap * 1.5;
       return;
@@ -855,10 +954,16 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
     // and continues overleaf is worse than a paragraph that starts overleaf, so
     // it goes over whole - and it is re-laid there, for the same reason the
     // widow fix is.
-    if (page && laid.lines.length > KEEP_LINES) {
+    //
+    // A paragraph too short to leave two lines on BOTH sides cannot be split at
+    // all: a two-line step broke one line per sheet, because this rule once
+    // started at three lines and the widow rule below cannot help a paragraph
+    // with nothing to spare.
+    if (page && laid.lines.length > 1) {
       var headLines = 0, s0 = sheetOf(laid.lines[0].y);
       for (var q = 0; q < laid.lines.length && sheetOf(laid.lines[q].y) === s0; q++) headLines++;
-      if (headLines < laid.lines.length && headLines < KEEP_LINES) {
+      var tooShortToSplit = laid.lines.length < KEEP_LINES * 2;
+      if (headLines < laid.lines.length && (headLines < KEEP_LINES || tooShortToSplit)) {
         var over = nextSheetTop(laid.lines[0].y);
         var altO = layoutAt(over);
         if (altO.lines.length) { y = over; laid = altO; }
@@ -895,7 +1000,15 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
     (block.children || []).forEach(function (c) { emit(c, depth + 1); });
   }
 
-  blocks.forEach(function (b) { emit(b, 0); });
+  // A player tucked under the title may overlap the torn ground; it covers
+  // the rule and is meant to sit there. Anything else starts below it.
+  var pendingOpening = null;
+  emitRun(blocks, function (b) {
+    if (pendingOpening != null && b.type !== 'media' && b.type !== 'voice-chapter') y = Math.max(y, pendingOpening);
+    pendingOpening = null;
+    emit(b, 0);
+    if (b.type === 'title') pendingOpening = openingBottom;
+  });
   return { items: items, blockY: blockY, bottom: y };
 }
 

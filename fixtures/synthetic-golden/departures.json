@@ -1,0 +1,407 @@
+{
+  "print-794": {
+    "decided": "2026-09-30",
+    "reason": "A two-line step may not break one line per sheet. The prototype set blk_synthetic_011 with its first line at the foot of sheet one and its second at the head of sheet two; the engine now sets the step whole on sheet two. The step after it, and the list that holds both, end 0.2px lower as a result.",
+    "blocks": [
+      "blk_synthetic_003",
+      "blk_synthetic_011",
+      "blk_synthetic_012"
+    ],
+    "expected": {
+      "height": 2292.052,
+      "sizes": {
+        "body": 23.534103418268018,
+        "lead": 35.301155127402026,
+        "display": 63.52774036028589,
+        "section": 38.12524753759419,
+        "caption": 19.297964802979774,
+        "gap": 40.59632839651233,
+        "pad": 46.052,
+        "colX": 95.64355663590246,
+        "colW": 577.9171084102438,
+        "wide": 0.5195125756428307,
+        "field": {
+          "pad": 46.052,
+          "contentW": 701.896,
+          "wide": 0.5195125756428307,
+          "aspect": 0.7070347284060552,
+          "landscape": 0,
+          "inches": 8.27,
+          "armsLength": 0.993846672,
+          "targetChars": 54.328718232856616,
+          "colShare": 0.8233657242814375,
+          "colBias": 0.4,
+          "displayScale": 2.6993907195535383,
+          "bannerHeightShare": 0.38,
+          "bannerWidthShare": 0.5628715365239295,
+          "bleedShare": 0.9960003368
+        },
+        "point": {
+          "dpi": 96.00967351874245,
+          "pxPerPt": 1.3334676877603118,
+          "floorPx": 16.001612253123742,
+          "assumed": false
+        },
+        "legendHeight": 89.64139992018286,
+        "legendY": 2140.0804
+      },
+      "pagination": {
+        "sheetCount": 2,
+        "usableHeight": 991.7518,
+        "keepLines": 2,
+        "sheets": [
+          {
+            "index": 0,
+            "opensWith": "blk_synthetic_001",
+            "blockIds": [
+              "blk_synthetic_001",
+              "blk_synthetic_002",
+              "blk_synthetic_003",
+              "blk_synthetic_004",
+              "blk_synthetic_005",
+              "blk_synthetic_006",
+              "blk_synthetic_007",
+              "blk_synthetic_008",
+              "blk_synthetic_009",
+              "blk_synthetic_010"
+            ],
+            "lines": 14
+          },
+          {
+            "index": 1,
+            "opensWith": "blk_synthetic_011",
+            "blockIds": [
+              "blk_synthetic_011",
+              "blk_synthetic_012"
+            ],
+            "lines": 3
+          }
+        ],
+        "strays": [],
+        "oversize": [],
+        "splits": [],
+        "legendOnSheet": 1,
+        "legendHeight": 89.64139992018286,
+        "legendOnOwnSheet": false
+      },
+      "flow": [
+        {
+          "blockId": "blk_synthetic_001",
+          "type": "title",
+          "role": "display",
+          "depth": 0,
+          "size": 63.52774036028589,
+          "box": {
+            "x": 95.64355663590246,
+            "y": 92.73777765598916,
+            "w": 427.65866022358045,
+            "h": 67.33940478190303
+          },
+          "lines": [
+            {
+              "x": 95.64355663590246,
+              "y": 92.73777765598916,
+              "w": 427.65866022358045,
+              "text": "The",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_002",
+          "type": "media",
+          "depth": 0,
+          "box": {
+            "x": 95.64355663590246,
+            "y": 160.0771824378922,
+            "w": 577.9171084102438,
+            "h": 211.05383945502757
+          },
+          "lines": []
+        },
+        {
+          "blockId": "blk_synthetic_003",
+          "type": "ordered-list",
+          "depth": 0,
+          "box": {
+            "x": 95.64355663590246,
+            "y": 454.35349510577004,
+            "w": 577.9171084102438,
+            "h": 830.4862937121088
+          },
+          "lines": []
+        },
+        {
+          "blockId": "blk_synthetic_004",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 464.2378185414426,
+            "w": 533.2023119155346,
+            "h": 70.60231025480402
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 464.2378185414426,
+              "w": 533.2023119155346,
+              "text": "Oat biscuits, the ones I make when there is",
+              "start": 0,
+              "end": 43
+            },
+            {
+              "x": 140.3583531306117,
+              "y": 499.5389736688446,
+              "w": 533.2023119155346,
+              "text": "nothing else in the house.",
+              "start": 44,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_005",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 544.7244522319191,
+            "w": 533.2023119155346,
+            "h": 70.60231025480402
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 544.7244522319191,
+              "w": 533.2023119155346,
+              "text": "You want two cups of rolled oats, a hundred grams",
+              "start": 0,
+              "end": 49
+            },
+            {
+              "x": 140.3583531306117,
+              "y": 580.0256073593212,
+              "w": 533.2023119155346,
+              "text": "of butter, and half a cup of soft brown sugar.",
+              "start": 50,
+              "end": 96
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_006",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 625.2110859223957,
+            "w": 533.2023119155346,
+            "h": 35.30115512740201
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 625.2110859223957,
+              "w": 533.2023119155346,
+              "text": "Melt the butter first, slowly, do not let it colour.",
+              "start": 0,
+              "end": 52
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_007",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 670.3965644854702,
+            "w": 533.2023119155346,
+            "h": 70.60231025480402
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 670.3965644854702,
+              "w": 533.2023119155346,
+              "text": "Pour it over the oats and the sugar and stir until",
+              "start": 0,
+              "end": 50
+            },
+            {
+              "x": 140.3583531306117,
+              "y": 705.6977196128722,
+              "w": 533.2023119155346,
+              "text": "every oat is wet.",
+              "start": 51,
+              "end": 68
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_008",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 750.8831981759467,
+            "w": 533.2023119155346,
+            "h": 70.60231025480402
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 750.8831981759467,
+              "w": 533.2023119155346,
+              "text": "I always press it down hard into the tin, hard,",
+              "start": 0,
+              "end": 47
+            },
+            {
+              "x": 140.3583531306117,
+              "y": 786.1843533033488,
+              "w": 533.2023119155346,
+              "text": "because a loose one falls apart when you cut it.",
+              "start": 48,
+              "end": 96
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_009",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 831.3698318664233,
+            "w": 533.2023119155346,
+            "h": 70.60231025480402
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 831.3698318664233,
+              "w": 533.2023119155346,
+              "text": "Bake it at a hundred and eighty until the edges go",
+              "start": 0,
+              "end": 50
+            },
+            {
+              "x": 140.3583531306117,
+              "y": 866.6709869938253,
+              "w": 533.2023119155346,
+              "text": "dark gold, about twenty five minutes.",
+              "start": 51,
+              "end": 88
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_010",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 911.8564655568998,
+            "w": 533.2023119155346,
+            "h": 70.60231025480402
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 911.8564655568998,
+              "w": 533.2023119155346,
+              "text": "Let it cool completely in the tin before you cut it,",
+              "start": 0,
+              "end": 52
+            },
+            {
+              "x": 140.3583531306117,
+              "y": 947.1576206843018,
+              "w": 533.2023119155346,
+              "text": "that is the part everyone gets wrong.",
+              "start": 53,
+              "end": 90
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_011",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 1169.052,
+            "w": 533.2023119155346,
+            "h": 70.60231025480425
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 1169.052,
+              "w": 533.2023119155346,
+              "text": "My mother used to make these on a Sunday and",
+              "start": 0,
+              "end": 44
+            },
+            {
+              "x": 140.3583531306117,
+              "y": 1204.353155127402,
+              "w": 533.2023119155346,
+              "text": "the whole house smelled of them by the afternoon.",
+              "start": 45,
+              "end": 94
+            }
+          ]
+        },
+        {
+          "blockId": "blk_synthetic_012",
+          "type": "ordered-item",
+          "role": "text",
+          "depth": 0,
+          "size": 23.534103418268018,
+          "box": {
+            "x": 140.3583531306117,
+            "y": 1249.5386336904767,
+            "w": 533.2023119155346,
+            "h": 35.301155127402126
+          },
+          "lines": [
+            {
+              "x": 140.3583531306117,
+              "y": 1249.5386336904767,
+              "w": 533.2023119155346,
+              "text": "It keeps a week in a tin, if it lasts that long.",
+              "start": 0,
+              "end": 48
+            }
+          ]
+        }
+      ],
+      "report": {
+        "ok": true,
+        "counts": {},
+        "findings": []
+      },
+      "published": true
+    }
+  }
+}
