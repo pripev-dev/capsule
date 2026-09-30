@@ -82,12 +82,17 @@ function layout(prepared, opts) {
   var lines = [], y = opts.y, i = 0, atoms = prepared.atoms;
   var guard = 0;
   while (i < atoms.length && guard++ < 4000) {
+    // Spaces never open a line. Skipped before the band is asked for, because a
+    // text ending in a space that did not fit on its last line was otherwise
+    // given one more, empty line: a blank line of her height under the step,
+    // on screen and on paper (the agent's blocks often end in a space).
+    while (i < atoms.length && atoms[i].space) i++;
+    if (i >= atoms.length) break;
     var intervals = opts.shapeFor(y, lead);
     if (!intervals.length) { y += lead; continue; }
     // Widest interval wins; a sliver beside a cutout is not a line of text.
     var iv = intervals.reduce(function (a, b) { return (b[1] - b[0]) > (a[1] - a[0]) ? b : a; });
     if (iv[1] - iv[0] < opts.minLine) { y += lead; continue; }
-    while (i < atoms.length && atoms[i].space) i++;
     var lineAtoms = [], x = 0, j = i;
     while (j < atoms.length) {
       var w = atoms[j].w * size;

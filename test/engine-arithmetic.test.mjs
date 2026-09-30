@@ -272,3 +272,18 @@ test("a mark is one gesture or one per line, and every kind is drawable", () => 
   const second = marks.BUILDERS.highlight(threeLines[1], seed);
   assert.notDeepEqual(first, second);
 });
+
+test("a text ending in a space that does not fit gets no extra, empty line", () => {
+  // The agent's blocks often end in a space. When the last word filled its
+  // line exactly, the space was left over and the layout gave it a line of its
+  // own: a blank line of body height under the step, on screen and on paper.
+  const measure = textlayout.makeMetricMeasurer();
+  const spec = { stack: "serif", key: "serif" };
+  const prepared = textlayout.prepare("Let it bubble gently. ", spec, measure);
+  const words = textlayout.prepare("Let it bubble gently.", spec, measure);
+  const width = words.atoms.reduce((w, a) => w + a.w * 20, 0) + 0.5;
+  const laid = textlayout.layout(prepared, { size: 20, leading: 1.5, y: 0, minLine: 1,
+    shapeFor: () => [[0, width]] });
+  assert.equal(laid.lines.length, 1);
+  assert.equal(laid.bottom, 30, "one line of 20px type at 1.5 leading ends at 30");
+});

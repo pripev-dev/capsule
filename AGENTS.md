@@ -8,7 +8,7 @@
 
 **Status: Phase A contract implemented, and the deterministic composition engine
 is here.** The schema set, validators, reference fixture, visual-fragment
-manifest V2, the ported engine and the privacy guard have **151 tests** (30
+manifest V2, the ported engine and the privacy guard have **152 tests** (30
 September 2026). On a clean public clone the ones that replay the private
 Design export skip and say so rather than failing. Several more skip anywhere git is
 unavailable, because they ask git how it classifies or enumerates the tracked
