@@ -23,6 +23,13 @@
  * Everything here is synthetic, so it runs on a clean public clone.
  *
  * If a comparison fails, the port is wrong. Never adjust the expectation.
+ *
+ * The one exception is a DECIDED departure: the prototype got something wrong,
+ * the engine now does it differently on purpose, and `departures.json` says
+ * which surface, which blocks, when and why. The prototype's bytes stay in
+ * `expected-surfaces.json` untouched; the surface is compared against the
+ * departure's own record instead, and every block the departure does not name
+ * must still be the prototype's, byte for byte.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -48,6 +55,7 @@ const input = load("input.json");
 const expectedCapsule = load("expected-capsule.json");
 const expectedSurfaces = load("expected-surfaces.json");
 const expectedRun = load("expected-run.json");
+const departures = load("departures.json");
 
 const measure = textlayout.makeMetricMeasurer();
 
@@ -108,7 +116,7 @@ test("the golden page is stored in the prototype's own serialisation", () => {
 for (const surface of input.surfaces) {
   const key = `${surface.kind}-${surface.w}`;
   test(`the ported engine reproduces the ${key} page geometry, byte for byte`, () => {
-    const want = expectedSurfaces[key];
+    const want = departures[key]?.expected ?? expectedSurfaces[key];
     assert.ok(want, `no recorded expectation for ${key}`);
     const got = composeOne(surface);
     const gotBytes = asRepoFile(got);
@@ -122,9 +130,27 @@ for (const surface of input.surfaces) {
 test("the whole surfaces record round-trips as the file on disk", () => {
   // The per-surface tests above compare one entry each; this compares the file,
   // so a surface that quietly disappeared from the record would be caught too.
+  // A departed surface is put back to the prototype's record, which is the one
+  // thing a departure may not change.
   const rebuilt = {};
-  for (const surface of input.surfaces) rebuilt[`${surface.kind}-${surface.w}`] = composeOne(surface);
+  for (const surface of input.surfaces) {
+    const key = `${surface.kind}-${surface.w}`;
+    rebuilt[key] = departures[key] ? expectedSurfaces[key] : composeOne(surface);
+  }
   assert.ok(asRepoFile(rebuilt).equals(bytesOf("expected-surfaces.json")));
+});
+
+test("a departure from the prototype names every block it moved, and only those", () => {
+  for (const [key, departure] of Object.entries(departures)) {
+    assert.ok(expectedSurfaces[key], `${key} departs from a surface the prototype never recorded`);
+    assert.match(departure.decided, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(departure.reason.length > 40, `${key}: a departure says why`);
+    const was = new Map(expectedSurfaces[key].flow.map((f) => [f.blockId, JSON.stringify(f)]));
+    const now = new Map(departure.expected.flow.map((f) => [f.blockId, JSON.stringify(f)]));
+    assert.deepEqual([...now.keys()], [...was.keys()], `${key}: a departure may not add or drop a block`);
+    const moved = [...now.keys()].filter((id) => now.get(id) !== was.get(id));
+    assert.deepEqual(moved, departure.blocks, `${key}: the blocks that moved are the blocks it names`);
+  }
 });
 
 test("the print sheets carry the keeps the prototype recorded", () => {

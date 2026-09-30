@@ -22,6 +22,28 @@ nothing.
 **If that test fails, the port is wrong.** Never regenerate the expectation to
 match the output.
 
+## Deliberate departures
+
+The prototype is not always right. When the engine is changed on purpose to do
+something the prototype did badly, `expected-surfaces.json` is **still not
+touched**: it stays the prototype's record. The change goes in
+`departures.json` instead, one entry per surface:
+
+| Field | What it is |
+|---|---|
+| `decided` | The date the departure was decided. |
+| `reason` | What the prototype did, and what the engine does now. |
+| `blocks` | Every block whose geometry moved. |
+| `expected` | The surface as the engine now composes it. |
+
+The test compares a departed surface against `expected`, and separately proves
+that every block the entry does not name is still the prototype's, byte for
+byte. A departure therefore cannot move more than it says it moves.
+
+The first one, on 30 September 2026: on an A4 sheet the prototype split a
+two-line step one line per sheet. The engine now sets it whole on the next
+sheet.
+
 ## Three things this fixture pins on purpose
 
 **The title is `"The"`.** English ships question wording and player chrome but no
@@ -51,3 +73,4 @@ and lists it. When Phase D closes it, that test fails, and it should.
 | `expected-capsule.json` | The page the prototype composed from it. |
 | `expected-surfaces.json` | Geometry, sizes, pagination and validator findings per surface. |
 | `expected-run.json` | The composer's own record: language pack, readiness, type and palette, intent, claims, marks, plan. |
+| `departures.json` | Surfaces the engine now composes differently on purpose, and why (above). |
