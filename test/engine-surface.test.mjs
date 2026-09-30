@@ -378,3 +378,20 @@ test("no photograph is cut by a sheet break", () => {
     }
   }
 });
+
+test("the words after a typographic title start below its torn ground and rule", () => {
+  // 30 September: on paper the player is left off, and the rule under the
+  // title ran through the first sentence of the introduction.
+  const cap = capsule([
+    { blockId: "blk_title", type: "title", text: "Blackberry pudding cake" },
+    { blockId: "blk_intro", type: "prose", text: LONG_STEP },
+  ]);
+  for (const surface of [A4, LETTER, SCREEN]) {
+    const model = compose(surface, cap);
+    assert.equal(model.banner.typographic, true);
+    const intro = model.flow.find((item) => item.blockId === "blk_intro");
+    const ground = model.banner.box.y + model.banner.box.h;
+    assert.ok(intro.lines[0].y >= ground, `${surface.kind}-${surface.w}: first line at ${intro.lines[0].y}, ground ends ${ground}`);
+    assert.ok(intro.lines[0].y > model.banner.rule.y, "the rule sits above the first line");
+  }
+});

@@ -235,8 +235,14 @@ function composeSurface(input) {
     ? banner.box.y + gapUnit * 1.15
     : banner.box.y + banner.box.h + gapUnit * 1.35;
 
+  // A typographic opening is a torn ground with the title on it and a rule
+  // under the title. Words after it start below that ground, not on it: on
+  // paper, where the player is left off, the rule ran through the first
+  // sentence (30 September).
+  var opening = banner.typographic ? banner.box.y + banner.box.h : null;
+
   // Pass A: where do the blocks fall with nothing in the way.
-  var passA = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, [], page, measure, rtl, banner.titleMeasure);
+  var passA = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, [], page, measure, rtl, banner.titleMeasure, opening);
 
   // The engine turns the skill's anchors into rectangles, now that it knows
   // where the anchored blocks are.
@@ -260,7 +266,7 @@ function composeSurface(input) {
   if (page) placements.forEach(function (p) { onOneSheet(p, page); });
 
   // Pass B: the same text, wrapped round the real contours.
-  var passB = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, placements, page, measure, rtl, banner.titleMeasure);
+  var passB = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, placements, page, measure, rtl, banner.titleMeasure, opening);
 
   var built = buildMarks(passB, tok, seed);
   var legendRows = (capsule.legend || []).length
@@ -502,7 +508,7 @@ var LIST_MARKER = { checklist: 'checkbox', 'ordered-list': 'number', 'bullet-lis
 // mirrored edition cannot reorder her sentence and an unmirrored one cannot
 // straighten an Arabic one. The collage still mirrors surface-wide - that is a
 // physical arrangement and belongs to the reader, not to her words.
-function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measure, editionRtl, titleMeasure) {
+function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measure, editionRtl, titleMeasure, openingBottom) {
   var items = [], blockY = {}, y = top;
   var blocks = capsule.blocks || [];
 
@@ -994,7 +1000,15 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
     (block.children || []).forEach(function (c) { emit(c, depth + 1); });
   }
 
-  emitRun(blocks, function (b) { emit(b, 0); });
+  // A player tucked under the title may overlap the torn ground; it covers
+  // the rule and is meant to sit there. Anything else starts below it.
+  var pendingOpening = null;
+  emitRun(blocks, function (b) {
+    if (pendingOpening != null && b.type !== 'media' && b.type !== 'voice-chapter') y = Math.max(y, pendingOpening);
+    pendingOpening = null;
+    emit(b, 0);
+    if (b.type === 'title') pendingOpening = openingBottom;
+  });
   return { items: items, blockY: blockY, bottom: y };
 }
 

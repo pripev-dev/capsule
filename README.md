@@ -8,7 +8,7 @@ preserved family recipe with no database, no account, and no company.
 
 > **Status: Phase A contract implemented, and the deterministic composition
 > engine is here.** The schemas, validators, reference fixture, cross-manifest
-> checks, the ported engine and the privacy guard have **152 tests** (30
+> checks, the ported engine and the privacy guard have **153 tests** (30
 > September 2026). On a clean public clone the ones that replay the private
 > Design export skip and say so rather than failing. `src/archive/` holds a
 > minimal offline reading fallback; the composed renderer lives in the
