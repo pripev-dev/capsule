@@ -3,6 +3,11 @@
  * Pair this with checkEvidenceQuotes, which verifies the quote against the
  * transcript. Whitespace and case may change during presentation; words may not.
  * This contract invariant is shared by writers and readers.
+ *
+ * A block the family has rewritten (`authoredBy.kind === "family"`) is exempt
+ * from the slice rule, not from citing: it keeps the evidence it was edited
+ * from, so a reader can still reach the recording, but its words are the
+ * family's own and may not be forced back into a machine quote.
  */
 const normalise = (text) => text.replace(/\s+/g, " ").trim().toLowerCase();
 
@@ -18,7 +23,7 @@ export function checkBlockTextIsQuoted(capsule, evidenceMap) {
         if (!cited.length) {
           offences.push({ blockId: block.blockId,
             reason: "carries text but cites no resolvable evidence", text: text.slice(0, 60) });
-        } else if (!cited.some((quote) => normalise(quote).includes(normalise(text)))) {
+        } else if (block.authoredBy?.kind !== "family" && !cited.some((quote) => normalise(quote).includes(normalise(text)))) {
           offences.push({ blockId: block.blockId,
             reason: "text is not a slice of any span it cites", text: text.slice(0, 60) });
         }

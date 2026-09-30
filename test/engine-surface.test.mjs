@@ -122,6 +122,16 @@ test("a screen surface is never held to the print rules", () => {
   assert.deepEqual(r.findings.filter((f) => f.code === "pagination"), []);
 });
 
+test("a long Cyrillic title keeps whole words inside a phone measure", () => {
+  const title = "\u043a\u043b\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043a\u0430\u044f " +
+    "\u0448\u0430\u0440\u043b\u043e\u0442\u043a\u0430";
+  const cap = capsule([{ blockId: "blk_title", type: "title", text: title }]);
+  const { model, report: r } = report({ kind: "screen", w: 390, h: 844 }, cap);
+  const titleItem = model.flow.find((item) => item.blockId === "blk_title");
+  assert.ok(titleItem?.lines?.length > 0);
+  assert.deepEqual(r.findings.filter((f) => f.code === "overflow"), []);
+});
+
 // --- pagination --------------------------------------------------------------
 
 test("a print surface reports what the sheets actually came out like", () => {
@@ -251,4 +261,137 @@ test("the 12pt floor is measured in points, and a legible sheet clears it", () =
       `${role} sets at ${(model.sizes[role] / pt.pxPerPt).toFixed(1)}pt`);
   }
   assert.deepEqual(r.findings.filter((f) => f.subject?.startsWith("type/")), []);
+});
+
+// --- sections, as the cookbook agent writes them ----------------------------
+//
+// The agent's pages are editorial groups: a section heading, then a numbered
+// sequence of steps inside it. The first printed page the owner tried broke in
+// three ways none of the tests above could see, because none of them composed
+// a group: a heading left alone at the foot of a sheet, a quarter-sheet hole
+// between two steps, and a two-line step split one line per sheet.
+
+// A break lands wherever the sheet puts it, so one sheet size proves little: a
+// rule that holds on A4 can fail on a sheet 30px shorter. These run on a sweep
+// of heights, which is how the faults below were made to show on purpose.
+const SWEEP = Array.from({ length: 36 }, (_, i) => {
+  const h = 900 + i * 12;
+  return { kind: "print", w: 794, h, pageH: h, widthInches: 8.27 };
+});
+
+const STEP = "Turn the mixture out onto the board and work it with the heel of your hand.";
+const LONG_STEP = `${STEP} ${STEP}`;
+
+function sections(count) {
+  const blocks = [{ blockId: "blk_title", type: "title", text: "A Test Preparation" }];
+  const treatments = [];
+  for (let i = 0; i < count; i += 1) {
+    const steps = Array.from({ length: 3 + (i % 3) }, (_, j) => ({
+      blockId: `blk_step_${i}_${j}`, type: "instruction-line", text: j % 2 ? STEP : LONG_STEP,
+    }));
+    blocks.push({ blockId: `blk_part_${i}`, type: "step-group", children: [
+      { blockId: `blk_head_${i}`, type: "prose", text: `Part ${i + 1}.` },
+      { blockId: `blk_seq_${i}`, type: "step-group", children: steps },
+    ] });
+    treatments.push(
+      { blockId: `blk_part_${i}`, treatment: "panel", fontRole: "text", emphasis: "normal", spacing: "regular" },
+      { blockId: `blk_head_${i}`, treatment: "section", fontRole: "display", emphasis: "normal", spacing: "regular" },
+      { blockId: `blk_seq_${i}`, treatment: "sequence", fontRole: "text", emphasis: "normal", spacing: "regular" },
+      ...steps.map((s) => ({ blockId: s.blockId, treatment: "body", fontRole: "text", emphasis: "normal", spacing: "regular" })),
+    );
+  }
+  const cap = capsule(blocks);
+  cap.compositions[0].intent.blockTreatments = treatments;
+  return cap;
+}
+
+test("a section heading is never the last thing on its sheet", () => {
+  for (const surface of SWEEP) {
+    const model = compose(surface, sections(12));
+    const flow = model.flow;
+    let checked = 0;
+    for (let i = 0; i < flow.length; i += 1) {
+      if (!String(flow[i].blockId).startsWith("blk_head_")) continue;
+      const next = flow.slice(i + 1).find((it) => it.lines?.length);
+      checked += 1;
+      assert.equal(sheetOf(model, next.lines[0].y), sheetOf(model, flow[i].lines.at(-1).y),
+        `${flow[i].blockId} ends sheet ${sheetOf(model, flow[i].box.y)} and its steps start overleaf`);
+    }
+    assert.equal(checked, 12);
+  }
+});
+
+test("a sequence carries no hole from where it was first set", () => {
+  // Kept whole or broken, the steps follow each other: the next step is either
+  // a normal gap below the last one or at the head of the next sheet. A hole
+  // is what moving a sequence as it was first laid used to leave behind.
+  let pairs = 0;
+  for (const surface of SWEEP) {
+  const model = compose(surface, sections(12));
+  const page = model.page;
+  for (const seq of model.flow.filter((it) => String(it.blockId).startsWith("blk_seq_"))) {
+    const steps = model.flow.filter((it) => String(it.blockId).startsWith(`${seq.blockId.replace("seq", "step")}_`));
+    for (let j = 1; j < steps.length; j += 1) {
+      pairs += 1;
+      const top = steps[j].lines[0].y;
+      const sameSheet = sheetOf(model, top) === sheetOf(model, steps[j - 1].lines.at(-1).y);
+      const gap = sameSheet
+        ? steps[j].box.y - (steps[j - 1].box.y + steps[j - 1].box.h)
+        : top - (page.top + sheetOf(model, top) * page.stride);
+      assert.ok(gap < model.sizes.lead * 2, `${surface.h}: ${steps[j].blockId} sits ${gap.toFixed(0)}px below where it should`);
+    }
+  }
+  }
+  assert.ok(pairs >= 30, `only ${pairs} pairs of steps were checked`);
+});
+
+test("no step short enough to keep whole is split across a sheet", () => {
+  for (const surface of SWEEP) {
+    const model = compose(surface, sections(12));
+    const keep = model.pagination.keepLines;
+    for (const it of model.flow) {
+      if (!it.lines?.length || it.lines.length >= keep * 2) continue;
+      const sheets = new Set(it.lines.map((ln) => sheetOf(model, ln.y)));
+      assert.equal(sheets.size, 1, `${surface.h}: ${it.blockId}: ${it.lines.length} lines on ${sheets.size} sheets`);
+    }
+  }
+});
+
+test("no photograph is cut by a sheet break", () => {
+  const cap = sections(12);
+  const square = [[0, 0], [1, 0], [1, 1], [0, 1]];
+  const fragmentsById = {};
+  cap.compositions[0].intent.freeFragments = Array.from({ length: 12 }, (_, i) => {
+    fragmentsById[`frg_${i}`] = { id: `frg_${i}`, aspect: 0.8, contour: square, src: "", weight: "medium", mode: "sticker" };
+    return { placementId: `plc_${i}`, fragmentId: `frg_${i}`, anchor: { blockId: `blk_seq_${i}` },
+             scaleRange: { min: 0.22, max: 0.3 }, band: { sentences: 6 }, wrapPriority: "contour" };
+  });
+  for (const surface of SWEEP) {
+    const model = layout.composeSurface({ capsule: cap, surface, measure, fragmentsById });
+    assert.ok(model.placements.length >= 6, `only ${model.placements.length} photographs were placed`);
+    const page = model.page;
+    for (const p of model.placements) {
+      const sheet = sheetOf(model, p.y);
+      const bandTop = page.top + sheet * page.stride;
+      assert.ok(p.y >= bandTop - 0.01 && p.y + p.h <= bandTop + page.h + 0.01,
+        `${surface.h}: ${p.placementId} runs from ${(p.y - bandTop).toFixed(0)} to ${(p.y + p.h - bandTop).toFixed(0)} on a ${page.h.toFixed(0)}px sheet`);
+    }
+  }
+});
+
+test("the words after a typographic title start below its torn ground and rule", () => {
+  // 30 September: on paper the player is left off, and the rule under the
+  // title ran through the first sentence of the introduction.
+  const cap = capsule([
+    { blockId: "blk_title", type: "title", text: "Blackberry pudding cake" },
+    { blockId: "blk_intro", type: "prose", text: LONG_STEP },
+  ]);
+  for (const surface of [A4, LETTER, SCREEN]) {
+    const model = compose(surface, cap);
+    assert.equal(model.banner.typographic, true);
+    const intro = model.flow.find((item) => item.blockId === "blk_intro");
+    const ground = model.banner.box.y + model.banner.box.h;
+    assert.ok(intro.lines[0].y >= ground, `${surface.kind}-${surface.w}: first line at ${intro.lines[0].y}, ground ends ${ground}`);
+    assert.ok(intro.lines[0].y > model.banner.rule.y, "the rule sits above the first line");
+  }
 });

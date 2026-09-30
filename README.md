@@ -8,10 +8,11 @@ preserved family recipe with no database, no account, and no company.
 
 > **Status: Phase A contract implemented, and the deterministic composition
 > engine is here.** The schemas, validators, reference fixture, cross-manifest
-> checks, the ported engine and the privacy guard have **124 tests**. On a
-> clean public clone 114 are runnable and 10 skip - those 10 replay the private Design
-> export and say so rather than failing. The offline viewer and the renderer
-> remain later work.
+> checks, the ported engine and the privacy guard have **153 tests** (30
+> September 2026). On a clean public clone the ones that replay the private
+> Design export skip and say so rather than failing. `src/archive/` holds a
+> minimal offline reading fallback; the composed renderer lives in the
+> application.
 >
 > This repository holds a page composition contract, not an assembler. The
 > composer's output is a *page*; turning one into a schema-valid durable
