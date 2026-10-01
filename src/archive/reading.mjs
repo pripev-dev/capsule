@@ -24,9 +24,10 @@ export function createReadingArchive(entries, font, limits) {
   if (!validate("capsule.schema.json", capsule).valid) throw new Error("Reading capsule is invalid");
   const evidenceMap = capsule.evidenceMap ? read(capsule.evidenceMap) : undefined;
   const fragmentManifest = capsule.visualPack ? read(capsule.visualPack.manifestRef) : undefined;
+  const artworkManifest = capsule.companyArtworkPack ? read(capsule.companyArtworkPack.manifestRef) : undefined;
   const preservation = read(capsule.preservation.manifestRef);
   if (!validate("preservation-manifest.schema.json", preservation).valid || preservation.capsuleId !== capsule.capsuleId ||
-      checkAll(capsule, { evidenceMap, fragmentManifest }).length) throw new Error("Reading documents fail the capsule contract");
+      checkAll(capsule, { evidenceMap, fragmentManifest, artworkManifest }).length) throw new Error("Reading documents fail the capsule contract");
   // The ZIP inventory proves bytes survived packaging; these checks also bind
   // included bytes to the canonical source and approved visual references.
   const checkPresent = ref => {
@@ -39,14 +40,14 @@ export function createReadingArchive(entries, font, limits) {
     if (typeof value.archivePath === "string" && typeof value.sha256 === "string") checkPresent(value);
     Object.values(value).forEach(walk);
   };
-  [capsule, evidenceMap, preservation].forEach(walk);
+  [capsule, evidenceMap, preservation, artworkManifest].forEach(walk);
   for (const item of fragmentManifest?.items ?? []) {
     for (const stem of ["mask", "alphaPng", "contour", "paperRender", "output"]) {
       if (item[`${stem}Path`]) checkPresent({ archivePath: item[`${stem}Path`], sha256: item[`${stem}Sha256`] });
     }
   }
-  const html = offlineHtml({ capsule, fragmentManifest, font, paths: [...files.keys()] });
-  const schemas = ["capsule", "common", "evidence-map", "preservation-manifest", "visual-fragment-manifest"].map(name => ({
+  const html = offlineHtml({ capsule, fragmentManifest, artworkManifest, font, paths: [...files.keys()] });
+  const schemas = ["capsule", "common", "evidence-map", "preservation-manifest", "visual-fragment-manifest", "company-artwork-manifest"].map(name => ({
     path: `schemas/${name}.schema.json`, bytes: readFileSync(join(SCHEMA_DIR, `${name}.schema.json`)),
   }));
   const instructions = Buffer.from(`Pripev offline reading copy

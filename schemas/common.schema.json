@@ -27,6 +27,8 @@
     "claimId":       { "type": "string", "pattern": "^clm_[0-9A-Za-z_-]{1,40}$" },
     "blockId":       { "type": "string", "pattern": "^blk_[0-9A-Za-z_-]{1,40}$" },
     "fragmentId":    { "type": "string", "pattern": "^(frg|gen)_[0-9A-Za-z_-]{1,40}$" },
+    "illustrationId": { "type": "string", "pattern": "^ill_[0-9A-Za-z_-]{1,40}$" },
+    "visualAssetId": { "anyOf": [{ "$ref": "#/$defs/fragmentId" }, { "$ref": "#/$defs/illustrationId" }] },
     "clusterId":     { "type": "string", "pattern": "^clu_[0-9A-Za-z_-]{1,40}$" },
     "placementId":   { "type": "string", "pattern": "^plc_[0-9A-Za-z_-]{1,40}$" },
     "editionId":     { "type": "string", "pattern": "^ed_[0-9A-Za-z_-]{1,40}$" },

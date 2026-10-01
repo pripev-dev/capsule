@@ -57,7 +57,7 @@ export function validate(schemaFile, document) {
 
 const ID_PREFIXES = [
   "cap", "fam", "per", "rec", "art", "tr", "seg", "ev", "clm",
-  "blk", "frg", "gen", "clu", "plc", "ed", "cmp", "ver", "fnt", "clr",
+  "blk", "frg", "gen", "ill", "clu", "plc", "ed", "cmp", "ver", "fnt", "clr",
 ];
 const ID_RE = new RegExp(`^(${ID_PREFIXES.join("|")})_[0-9A-Za-z_-]{1,40}$`);
 
@@ -176,7 +176,7 @@ export function checkVisualRunBindings(manifest) {
  * This is what makes offline reconstruction verifiable: a viewer with no
  * database can prove that nothing in the document points into thin air.
  */
-export function checkClosure(capsule, { evidenceMap, fragmentManifest } = {}) {
+export function checkClosure(capsule, { evidenceMap, fragmentManifest, artworkManifest } = {}) {
   const declared = new Set();
   const declare = (id) => { if (typeof id === "string") declared.add(id); };
 
@@ -210,6 +210,7 @@ export function checkClosure(capsule, { evidenceMap, fragmentManifest } = {}) {
   for (const id of capsule.visualPack?.approvedFragmentIds ?? []) declare(id);
   for (const r of evidenceMap?.records ?? []) declare(r.evidenceId);
   for (const i of fragmentManifest?.items ?? []) declare(i.id);
+  for (const i of artworkManifest?.items ?? []) declare(i.id);
 
   const dangling = [];
   walk(capsule, (node, pointer) => {
@@ -252,21 +253,51 @@ export function checkNoPixels(capsule) {
  */
 export function checkApprovedFragmentsOnly(capsule) {
   const approved = new Set(capsule.visualPack?.approvedFragmentIds ?? []);
+  const decoration = new Set(capsule.companyArtworkPack?.approvedArtworkIds ?? []);
   const used = [];
   for (const [i, composition] of (capsule.compositions ?? []).entries()) {
     for (const cluster of composition.intent?.clusters ?? []) {
       for (const id of cluster.memberFragmentIds ?? []) {
-        used.push({ pointer: `/compositions/${i}/intent/clusters`, id });
+        used.push({ pointer: `/compositions/${i}/intent/clusters`, id, decoration: true });
       }
     }
     for (const fp of composition.intent?.freeFragments ?? []) {
-      used.push({ pointer: `/compositions/${i}/intent/freeFragments`, id: fp.fragmentId });
+      used.push({ pointer: `/compositions/${i}/intent/freeFragments`, id: fp.fragmentId, decoration: true });
     }
     for (const id of composition.intent?.tokens?.palette?.sampledFromFragmentIds ?? []) {
       used.push({ pointer: `/compositions/${i}/intent/tokens/palette`, id });
     }
   }
-  return used.filter(({ id }) => !approved.has(id));
+  return used.filter(item => !approved.has(item.id) && !(item.decoration && decoration.has(item.id)))
+    .map(({ pointer, id }) => ({ pointer, id }));
+}
+
+/** Company decoration is opt-in, hash-bound and never a family visual class. */
+export function checkCompanyArtwork(capsule, artworkManifest) {
+  const pack = capsule.companyArtworkPack;
+  if (!pack) return artworkManifest ? ["Company artwork supplied without an explicit document artwork pack"] : [];
+  if (!pack.manifestRef || !Array.isArray(pack.approvedArtworkIds)) return ["Incomplete company artwork pack"];
+  if (!artworkManifest) return ["Company artwork pack has no separate manifest"];
+  const checked = validate("company-artwork-manifest.schema.json", artworkManifest);
+  if (!checked.valid) return checked.errors.map(e => `company artwork schema ${e.path}: ${e.message}`);
+  const failures = [];
+  const hash = createHash("sha256").update(stableJson(artworkManifest)).digest("hex");
+  if (pack.manifestRef.sha256 !== hash) failures.push("Company artwork manifest hash differs from the document");
+  const ids = new Set();
+  for (const item of artworkManifest.items) {
+    if (ids.has(item.id)) failures.push(`Duplicate company artwork ${item.id}`);
+    ids.add(item.id);
+    if (item.review.decision !== "approved") failures.push(`Company artwork ${item.id} was not approved`);
+    if (item.review.outputSha256 !== item.outputRef.sha256) failures.push(`Company artwork ${item.id} review does not bind its output`);
+    if (capsule.access?.visibility === "public" && !item.publicUseApproved) {
+      failures.push(`Company artwork ${item.id} has no public-use approval`);
+    }
+  }
+  const selected = new Set(pack.approvedArtworkIds);
+  if (selected.size !== ids.size || [...selected].some(id => !ids.has(id))) {
+    failures.push("Company artwork approval allowlist differs from its manifest");
+  }
+  return failures;
 }
 
 /**
@@ -303,13 +334,13 @@ export function checkEvidenceQuotes(capsule, evidenceMap) {
 }
 
 /** Everything, in one call. Returns a list of human-readable failures. */
-export function checkAll(capsule, { evidenceMap, fragmentManifest } = {}) {
+export function checkAll(capsule, { evidenceMap, fragmentManifest, artworkManifest } = {}) {
   const failures = [];
   const schema = validate("capsule.schema.json", capsule);
   for (const e of schema.errors) {
     failures.push(`schema ${e.path}: ${e.message}`);
   }
-  for (const d of checkClosure(capsule, { evidenceMap, fragmentManifest })) {
+  for (const d of checkClosure(capsule, { evidenceMap, fragmentManifest, artworkManifest })) {
     failures.push(`dangling identifier ${d.id} at ${d.pointer}`);
   }
   for (const o of checkNoPixels(capsule)) {
@@ -329,5 +360,6 @@ export function checkAll(capsule, { evidenceMap, fragmentManifest } = {}) {
   if (fragmentManifest) {
     failures.push(...checkVisualRunBindings(fragmentManifest));
   }
+  failures.push(...checkCompanyArtwork(capsule, artworkManifest));
   return failures;
 }

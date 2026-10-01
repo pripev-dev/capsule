@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.pripev.com/v0/company-artwork-manifest.schema.json",
+  "title": "Optional company artwork manifest",
+  "description": "Decorative company illustrations explicitly approved for this document. Never family source, a source-derived sticker or recipe evidence. Stored separately from both family visual classes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "assetType", "items"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "assetType": { "const": "company-illustration" },
+    "items": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "label", "role", "outputRef", "creation", "review", "publicUseApproved"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/illustrationId" },
+          "label": { "type": "string", "minLength": 1 },
+          "role": { "const": "decorative" },
+          "outputRef": {
+            "allOf": [
+              { "$ref": "common.schema.json#/$defs/hashRef" },
+              { "properties": { "archivePath": { "pattern": "^visual/company-artwork/" } } }
+            ]
+          },
+          "creation": {
+            "type": "object", "additionalProperties": false,
+            "required": ["method", "prompt", "model", "createdAt"],
+            "properties": {
+              "method": { "const": "generated" },
+              "prompt": { "type": "string", "minLength": 1 },
+              "model": { "type": ["string", "null"] },
+              "createdAt": { "type": "string", "format": "date-time" }
+            }
+          },
+          "review": {
+            "type": "object", "additionalProperties": false,
+            "required": ["decision", "recordedBy", "recordedAt", "outputSha256"],
+            "properties": {
+              "decision": { "enum": ["approved", "rejected", "pending"] },
+              "recordedBy": { "type": "string", "minLength": 1 },
+              "recordedAt": { "type": "string", "format": "date-time" },
+              "outputSha256": { "$ref": "common.schema.json#/$defs/sha256" }
+            }
+          },
+          "publicUseApproved": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

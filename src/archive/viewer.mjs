@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { archivePath } from "./index.mjs";
 import { offlineFontCss } from "./fonts.mjs";
-import { validate, checkVisualRunBindings } from "../validate/index.mjs";
+import { validate, checkVisualRunBindings, checkCompanyArtwork } from "../validate/index.mjs";
 
 const escape = value => String(value ?? "").replace(/[&<>"']/g, char => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -11,7 +11,7 @@ const escape = value => String(value ?? "").replace(/[&<>"']/g, char => ({
  * It never fetches JSON or requires a server. The canonical document retains
  * composition intent; this reader preserves text order without inventing layout.
  */
-export function offlineHtml({ capsule, font, paths, fragmentManifest }) {
+export function offlineHtml({ capsule, font, paths, fragmentManifest, artworkManifest }) {
   const included = new Set(paths.map(archivePath));
   const captions = [];
   const local = ref => ref?.archivePath && included.has(ref.archivePath) ? `../${archivePath(ref.archivePath)}` : null;
@@ -75,6 +75,15 @@ export function offlineHtml({ capsule, font, paths, fragmentManifest }) {
     if (found.size !== approved.size) throw new Error("An approved offline visual is missing");
   } else if (capsule.visualPack?.approvedFragmentIds?.length) {
     visuals = "<p>Visual attachments are not available in this reading copy.</p>";
+  }
+  if (checkCompanyArtwork(capsule, artworkManifest).length) throw new Error("Invalid offline company artwork manifest");
+  for (const item of artworkManifest?.items ?? []) {
+    const path = item.outputRef.archivePath, src = local(item.outputRef);
+    if (!/\.(png|webp|jpe?g)$/i.test(path)) throw new Error("Unsafe offline company artwork path");
+    captions.push(item.label);
+    const label = "Generated company illustration; decorative, not family source";
+    visuals += src ? `<figure><img src="${escape(src)}" alt="${escape(item.label)}" loading="lazy"><figcaption>${escape(item.label)}<small>${label}</small></figcaption></figure>`
+      : `<p>${escape(item.label)}: this company illustration is not included in this copy.</p>`;
   }
   const fontCss = offlineFontCss(capsule, font, included, captions.join(" "));
   const fontCheck = `document.fonts.load('20px ' + getComputedStyle(document.body).fontFamily, document.querySelector('main').textContent + document.querySelector('#transcripts').textContent + document.querySelector('#visuals').textContent).then(fonts => { if (!fonts.length) throw new Error('font missing'); document.querySelector('main').hidden = false; document.querySelector('#font-status').hidden = true; }).catch(() => { document.querySelector('#font-status').textContent = 'The bundled typeface could not load. Keep the extracted archive together and check its integrity before reading or printing.'; });`;

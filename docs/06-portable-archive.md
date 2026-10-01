@@ -1,6 +1,9 @@
 # 06 – Portable archive integrity
 
 The archive module packages explicitly supplied, authorised bytes into a ZIP.
+Optional company illustration packs retain a separate manifest and provenance
+label in the reading copy; their included bytes are hash-checked. See
+[07 – Company artwork](07-company-artwork.md).
 It does not crawl directories, decide permission or claim a complete export.
 The application must supply the filtered capsule, media, schemas, licensed
 fonts and rendered fallbacks. No missing source can be invented.

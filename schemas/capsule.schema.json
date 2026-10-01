@@ -169,6 +169,16 @@
       }
     },
 
+    "companyArtworkPack": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifestRef", "approvedArtworkIds"],
+      "description": "Optional company decoration selected explicitly for this document. Its separate manifest preserves generated provenance; it does not supply recipe evidence or sampled family colours.",
+      "properties": {
+        "manifestRef": { "allOf": [{ "$ref": "common.schema.json#/$defs/hashRef" }, { "properties": { "archivePath": { "pattern": "^visual/company-artwork/" } } }] },
+        "approvedArtworkIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/illustrationId" } }
+      }
+    },
+
     "evidenceMap": { "$ref": "common.schema.json#/$defs/hashRef" },
 
     "fonts": {
@@ -362,6 +372,10 @@
   },
 
   "allOf": [
+    {
+      "if": { "required": ["companyArtworkPack"] },
+      "then": { "properties": { "schemaRevision": { "minimum": 2 } } }
+    },
     {
       "$comment": "Composition-stage requirements. Below `composed`, the content and artifact planes must be absent, which is what lets an honestly incomplete capsule validate.",
       "if": {
@@ -878,7 +892,7 @@
           }
         },
         "memberFragmentIds": { "type": "array", "minItems": 1,
-                               "items": { "$ref": "common.schema.json#/$defs/fragmentId" } },
+                               "items": { "$ref": "common.schema.json#/$defs/visualAssetId" } },
         "densityRange":  { "$ref": "common.schema.json#/$defs/normalizedRange" },
         "density":       { "$ref": "common.schema.json#/$defs/normalizedUnit" },
         "overlapRange":  { "$ref": "common.schema.json#/$defs/normalizedRange" },
@@ -902,7 +916,7 @@
       "required": ["placementId", "fragmentId", "anchor"],
       "properties": {
         "placementId": { "$ref": "common.schema.json#/$defs/placementId" },
-        "fragmentId":  { "$ref": "common.schema.json#/$defs/fragmentId" },
+        "fragmentId":  { "$ref": "common.schema.json#/$defs/visualAssetId" },
         "anchor": {
           "type": "object",
           "additionalProperties": false,
