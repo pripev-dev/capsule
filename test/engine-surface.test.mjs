@@ -85,6 +85,30 @@ const LETTER = { kind: "print", w: 816, h: 1056, pageH: 1056, widthInches: 8.5 }
 const A4 = { kind: "print", w: 794, h: 1123, pageH: 1123, widthInches: 8.27 };
 const SCREEN = { kind: "screen", w: 1180, h: 860 };
 
+test("a single-piece opening is compact and keeps the rotated source whole on every surface", () => {
+  const cap = capsule();
+  cap.compositions[0].intent.clusters = [{ role: "opening-banner", memberFragmentIds: ["frg_only"], density: 0.94 }];
+  const before = JSON.stringify(cap);
+  for (const aspect of [0.45, 1.5, 3.5]) for (const surface of [
+    { kind: "screen", w: 390, h: 844 }, { kind: "screen", w: 768, h: 1024 }, SCREEN, A4, LETTER,
+  ]) {
+    const fragmentsById = { frg_only: { id: "frg_only", aspect, src: "", weight: "heavy", mode: "normal" } };
+    const model = layout.composeSurface({ capsule: cap, surface, measure, fragmentsById });
+    assert.ok(model.banner.box.h <= model.sizes.lead * 5.5, "one fragment must not reserve a full collage opening");
+    assert.equal(model.banner.items.length, 1);
+    const it = model.banner.items[0], box = model.banner.box;
+    assert.ok(Math.abs(it.w / it.h - aspect) < 1e-9, "preserve source proportions");
+    const angle = Math.abs(it.rot) * Math.PI / 180;
+    const halfW = (it.w * Math.cos(angle) + it.h * Math.sin(angle)) / 2;
+    const halfH = (it.h * Math.cos(angle) + it.w * Math.sin(angle)) / 2;
+    const cx = it.x + it.w / 2, cy = it.y + it.h / 2;
+    assert.ok(cx - halfW >= box.x && cx + halfW <= box.x + box.w, "no source edge clipped horizontally");
+    assert.ok(cy - halfH >= box.y && cy + halfH <= box.y + box.h, "no source edge clipped vertically");
+    assert.deepEqual(model.banner, layout.composeSurface({ capsule: cap, surface, measure, fragmentsById }).banner);
+  }
+  assert.equal(JSON.stringify(cap), before);
+});
+
 function compose(surface, cap = capsule()) {
   return layout.composeSurface({ capsule: cap, surface, measure, fragmentsById: {} });
 }

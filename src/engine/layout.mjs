@@ -415,7 +415,15 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
     };
   }
   var h = Math.min(surface.h * field.bannerHeightShare, box.w * field.bannerWidthShare);
+  // One approved piece is an opening accent, not a heap with missing members.
+  // Keep its space in proportion to the reading rhythm rather than reserving
+  // the full collage band; no duplicate or unrelated asset fills the gap.
+  if (frags.length === 1) h = Math.min(h, sizes.lead * 5.5);
   var bbox = { x: box.x, y: box.y, w: box.w, h: h };
+  if (frags.length === 1) {
+    bbox.w = Math.min(box.w, h * Math.max(0.01, frags[0].aspect || 1) + sizes.body * 2);
+    bbox.x += (box.w - bbox.w) / 2;
+  }
   var packed = C.packBanner({ fragments: frags, box: bbox, density: cluster.density, seed: seed,
                               // A sheet that declared its physical size has a real
                               // edge; a screen does not. That is a fact about the

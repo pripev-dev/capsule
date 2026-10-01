@@ -33,6 +33,21 @@ function packBanner(opts) {
   var frags = opts.fragments, box = opts.box, density = opts.density;
   if (!frags.length) return { items: [], coverage: 0 };
   var r = rng.stream(opts.seed, 'banner');
+  if (frags.length === 1) {
+    // The grid's first empty cell is its top-left corner. With one piece there
+    // is no later placement to balance it. Centre the source, fitting its
+    // rotated envelope so none of the photograph is lost at a paper edge.
+    var f = frags[0], aspect = Math.max(0.01, f.aspect || 1);
+    var rot = rng.range(r, -2.5, 2.5), angle = Math.abs(rot) * Math.PI / 180;
+    var h = Math.min(box.w * 0.92 / (aspect * Math.cos(angle) + Math.sin(angle)),
+                     box.h * 0.92 / (Math.cos(angle) + aspect * Math.sin(angle)));
+    var w = h * aspect;
+    return { items: [{ fragmentId: f.id, src: f.src,
+      x: box.x + (box.w - w) / 2, y: box.y + (box.h - h) / 2,
+      w: w, h: h, rot: rot, z: 0, weight: f.weight, mode: f.mode, label: f.label }],
+      coverage: w * h * (f.fill || 1) / (box.w * box.h),
+      kindsUsed: 1, kindsAvailable: 1, timesUsed: { [f.id]: 1 }, perKindCap: 1 };
+  }
   var GX = 7, GY = 5, grid = new Float64Array(GX * GY);
   // Density changes the scale, overlap and rotation of the selected pieces. It
   // never changes their count: repeating an approved fragment turns a collage
