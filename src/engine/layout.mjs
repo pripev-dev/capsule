@@ -186,6 +186,12 @@ function composeSurface(input) {
   // nobody can read is not.
   var floorPx = pt ? Math.max(LEGIBILITY_FLOOR_PX, pt.floorPx) : LEGIBILITY_FLOOR_PX;
   var body = Math.max(floorPx, colW / (targetChars * advText));
+  // Revision 3 introduces explicit editorial type roles. Its printed body is
+  // reading type at arm's length, not the enlarged screen measure. Keep the
+  // physical 12pt floor and cap the body at 13pt; headings retain their roles.
+  // Earlier prototype editions retain their measured geometry.
+  var modernEditorial = capsule.schemaRevision >= 3;
+  if (pt && modernEditorial) body = Math.max(floorPx, Math.min(body, 13 * pt.pxPerPt));
   var leadScale = (tok.rhythm && tok.rhythm.leadingScale) || 1.5;
   var lead = body * leadScale;
   var display = body * P0.displayScale;
@@ -196,6 +202,7 @@ function composeSurface(input) {
                 caption: pt ? Math.max(pt.floorPx, body * 0.82) : body * 0.82,
                 gap: gapUnit, pad: pad, colX: colX, colW: colW, wide: wide,
                 field: P0, point: pt };
+  if (modernEditorial) sizes.modernEditorial = true;
 
   // Print sheets. A page break is a band no line may occupy.
   //
@@ -463,6 +470,12 @@ function mediaHeight(block, kind, fonts, sz, width, measure) {
   var pad = sz.body * 0.9, h = pad * 1.6;
   h += sz.caption * 1.6;                                    // the heading row
   var media = kind === 'media' ? block : (block.subPage && block.subPage.media);
+  if (sz.modernEditorial && kind === 'media' && !block.printRemnant) {
+    // Match the renderer's padding and real rows. A chapter with no visible
+    // heading must not reserve a caption row plus a second empty control band.
+    h = pad * 1.4 + (block.headingText || block.text || block.durationSeconds
+      ? sz.caption * 1.2 + sz.body * 0.5 : sz.body * 0.5);
+  }
   // On paper the player is gone. What is left of it is the heading row that is
   // already counted above - her label and the recording's length - and the
   // download link, whose address the print stylesheet reveals. Measuring the
@@ -471,9 +484,9 @@ function mediaHeight(block, kind, fonts, sz, width, measure) {
   if (media && block.printRemnant) return h + sz.caption * 1.8 + pad * 0.6;
   if (media) {
     h += sz.body * 2.1 + sz.body * 0.5;                     // native controls
-    h += sz.caption * 2.0 + sz.body * 0.5;                  // speed, volume, download
+    h += sz.caption * (sz.modernEditorial ? 1.8 : 2.0) + sz.body * 0.5; // speed, volume, download
     if (media.chapters && media.chapters.length) h += sz.caption * 2.0 + sz.body * 0.5;
-    h += sz.caption * 1.8;                                  // the transcript's own label
+    h += sz.caption * (sz.modernEditorial ? 1.3 : 1.8);      // the transcript's own label
     var expanded = !media.transcript || media.transcript.expandedByDefault !== false;
     if (expanded && media.transcriptText) {
       var size = sz.body * 0.88, lead = size * 1.55;

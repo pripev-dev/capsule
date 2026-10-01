@@ -83,6 +83,30 @@ function capsule(blockList = blocks(9)) {
 
 const LETTER = { kind: "print", w: 816, h: 1056, pageH: 1056, widthInches: 8.5 };
 const A4 = { kind: "print", w: 794, h: 1123, pageH: 1123, widthInches: 8.27 };
+
+test("modern editorial print uses physical reading type rather than enlarged screen type", () => {
+  const c = capsule(blocks(2)); c.schemaRevision = 3;
+  for (const surface of [A4, LETTER]) {
+    const model = layout.composeSurface({ capsule: c, surface, measure });
+    const points = model.sizes.body / model.sizes.point.pxPerPt;
+    assert.ok(points >= 12 && points <= 13.01, `body size ${points}pt`);
+    assert.equal(validate.validate({ capsule: c, model, approvedFragmentIds: [] }).ok, true);
+  }
+});
+
+test("modern collapsed voice area reserves controls without an empty heading row", () => {
+  const c = capsule([{ blockId: "blk_title", type: "title", text: "Synthetic recipe" },
+    { blockId: "blk_voice", type: "media", transcript: { expandedByDefault: false } },
+    { blockId: "blk_body", type: "paragraph", text: PARAGRAPH }]);
+  c.schemaRevision = 3;
+  const model = layout.composeSurface({ capsule: c, surface: { kind: "screen", w: 390, h: 844 }, measure });
+  const voice = model.flow.find(i => i.blockId === "blk_voice");
+  assert.ok(voice.box.h <= model.sizes.body * 7.5, "collapsed controls should not reserve a large blank panel");
+  const expanded = structuredClone(c); expanded.blocks[1].transcript.expandedByDefault = true;
+  expanded.blocks[1].transcriptText = PARAGRAPH.repeat(4);
+  const open = layout.composeSurface({ capsule: expanded, surface: { kind: "screen", w: 390, h: 844 }, measure });
+  assert.ok(open.flow.find(i => i.blockId === "blk_voice").box.h > voice.box.h * 2);
+});
 const SCREEN = { kind: "screen", w: 1180, h: 860 };
 
 test("a single-piece opening is compact and keeps the rotated source whole on every surface", () => {
