@@ -16,6 +16,15 @@ import assert from "node:assert/strict";
 
 import * as compose from "../src/engine/compose.mjs";
 
+test("fragment geometry retains explicit company provenance without relabelling family assets", () => {
+  const [family, company] = compose.readFragments([
+    { fragmentId: "frg_test", boundingBox: { width: 100, height: 50 } },
+    { fragmentId: "ill_test", assetType: "company-illustration", boundingBox: { width: 100, height: 50 } },
+  ]);
+  assert.equal(Object.hasOwn(family, "assetType"), false);
+  assert.equal(company.assetType, "company-illustration");
+});
+
 test("the skill keys are the seventeen the run calls, by their own names", () => {
   assert.equal(compose.SKILL_KEYS.length, 17);
   assert.deepEqual([...compose.SKILL_KEYS].sort(), [

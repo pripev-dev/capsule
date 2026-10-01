@@ -24,6 +24,13 @@
               { "properties": { "archivePath": { "pattern": "^visual/company-artwork/" } } }
             ]
           },
+          "contourRef": {
+            "allOf": [
+              { "$ref": "common.schema.json#/$defs/hashRef" },
+              { "properties": { "archivePath": { "pattern": "^visual/company-artwork/" } } }
+            ],
+            "description": "Optional hash-bound alpha-derived contour for composed placement; not family source."
+          },
           "creation": {
             "type": "object", "additionalProperties": false,
             "required": ["method", "prompt", "model", "createdAt"],

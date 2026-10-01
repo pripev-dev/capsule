@@ -32,6 +32,7 @@ function readFragments(intakeFragments) {
     var box = f.boundingBox || { width: 1, height: 1 };
     return {
       id: f.fragmentId, fragmentId: f.fragmentId,
+      ...(f.assetType ? { assetType: f.assetType } : {}),
       src: f.assets && (f.assets.alphaPng || f.assets.paperPng),
       label: f.label, subjectHint: f.subjectHint, tags: f.tags || [],
       weight: f.compositionWeight || f.weight || 'medium',
@@ -118,8 +119,9 @@ function run(job) {
     // The colours that reach this page are the colours of the photographs this
     // page's own fragments came out of. A page with no fragments falls back to
     // every palette the family sent, and to none if they sent none.
-    var myPalettes = mine.length
-      ? (job.palettes || []).filter(function (p) { return mine.some(function (f) { return f.fragmentId === p.fragmentId; }); })
+    var familyMine = mine.filter(function (f) { return f.assetType !== 'company-illustration'; });
+    var myPalettes = familyMine.length
+      ? (job.palettes || []).filter(function (p) { return familyMine.some(function (f) { return f.fragmentId === p.fragmentId; }); })
       : (job.palettesForPagesWithoutFragments || []);
     // Where this page's colour comes from, decided from the material before
     // either skill runs, so readiness and the palette record cannot disagree.
