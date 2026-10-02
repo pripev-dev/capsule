@@ -240,7 +240,7 @@ function composeSurface(input) {
   // saying what this is instead of with an empty band.
   var flowTop = banner.typographic
     ? banner.box.y + gapUnit * 1.15
-    : banner.box.y + banner.box.h + gapUnit * 1.35;
+    : banner.box.y + banner.box.h + gapUnit * (modernEditorial ? 0.75 : 1.35);
 
   // A typographic opening is a torn ground with the title on it and a rule
   // under the title. Words after it start below that ground, not on it: on
@@ -924,7 +924,11 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
       blockY[block.blockId] = y;
       items.push({ blockId: block.blockId, type: kind, kind: 'reserved', depth: depth, block: block,
                    box: { x: colX + indent, y: y, w: colW - indent, h: h } });
-      y += h + sz.gap * 1.2;
+      // Modern editorial blocks own their own leading separation. Adding a
+      // second section gap after the player creates an empty band before the
+      // first recipe group. Reserve only the controls here; the next block
+      // supplies its normal gap. Archived editions keep their old rhythm.
+      y += h + (sz.modernEditorial ? 0 : sz.gap * 1.2);
       (block.children || []).forEach(function (c) { emit(c, depth + 1); });
       return;
     }

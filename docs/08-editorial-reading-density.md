@@ -28,3 +28,11 @@ unchanged. Earlier archived editions keep their established geometry.
 A real private two-piece desktop comparison brings the first recipe lines
 into the opening viewport. That is useful visual evidence, not proof of final
 quality: balance, overlap and print still require rendered review.
+
+Revision 3 also avoids accumulating two section gaps between the original
+player and the first editorial group. The following block owns that gap;
+the player reserves its actual controls and any expanded transcript. The
+space between collage and title is reduced to fit the same reading flow.
+Legacy editions retain their prior spacing. A private botvinniki comparison
+shows the first preparation instructions in the opening desktop viewport;
+this does not by itself establish final phone, print or aesthetic quality.

@@ -109,6 +109,26 @@ test("modern collapsed voice area reserves controls without an empty heading row
 });
 const SCREEN = { kind: "screen", w: 1180, h: 860 };
 
+test("modern voice and first recipe group do not accumulate two section gaps", () => {
+  const c = capsule([{blockId:"blk_title",type:"title",text:"Synthetic recipe"},
+    {blockId:"blk_voice",type:"media",transcript:{expandedByDefault:false}},
+    {blockId:"blk_group",type:"editorial-group",editorial:{treatment:"panel",fontRole:"text",emphasis:"normal",spacing:"regular"},
+      children:[{blockId:"blk_body",type:"paragraph",text:PARAGRAPH}]}]);
+  c.schemaRevision = 3;
+  for (const surface of [{kind:"screen",w:390,h:844},SCREEN]) {
+    const model = layout.composeSurface({capsule:c,surface,measure});
+    const voice = model.flow.find(i=>i.blockId==="blk_voice");
+    const body = model.flow.find(i=>i.blockId==="blk_body");
+    assert.ok(body.box.y-(voice.box.y+voice.box.h) < model.sizes.lead*2,
+      "first recipe passage should follow within two lines of reading rhythm");
+    const expanded = structuredClone(c); expanded.blocks[1].transcript.expandedByDefault=true;
+    expanded.blocks[1].transcriptText=PARAGRAPH.repeat(3);
+    const open=layout.composeSurface({capsule:expanded,surface,measure});
+    assert.ok(open.flow.find(i=>i.blockId==="blk_body").box.y>body.box.y,
+      "expanded original transcript must retain its required space");
+  }
+});
+
 test("modern small collages leave space for voice and preserve unique source proportions", () => {
   const cap = capsule(); cap.schemaRevision = 3;
   cap.compositions[0].intent.clusters = [{role:"opening-banner",memberFragmentIds:["frg_a","frg_b"],density:0.72}];
