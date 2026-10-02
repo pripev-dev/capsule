@@ -228,6 +228,46 @@ function scatter(opts) {
   return out;
 }
 
-var API = { packBanner: packBanner, scatter: scatter };
+// Structural heaps enter the same contour blockers as individual fragments.
+// Their selection rectangle is never a wrapping obstacle.
+function bodyClusters(opts) {
+  var out = [];
+  for (var cluster of opts.clusters || []) {
+    if (cluster.role === 'opening-banner') continue;
+    var anchorY = opts.blockY[cluster.anchor.blockId];
+    if (anchorY == null) continue;
+    var surfaceKey = opts.surface.kind === 'print' ? 'print' : opts.surface.w < 600 ? 'phone' : opts.surface.w < 1000 ? 'tablet' : null;
+    var policy = surfaceKey ? cluster.surfaces?.[surfaceKey] : 'keep';
+    if (policy === 'drop') continue;
+    var fragments = [...new Set(cluster.memberFragmentIds)].map(id => opts.byId[id]).filter(Boolean);
+    if (!fragments.length) continue;
+    var random = rng.stream(opts.seed, 'cluster/' + cluster.clusterId);
+    var right = random() > 0.5;
+    if (opts.mirror) right = !right;
+    var width = cluster.role === 'horizontal-divider' ? opts.col.w : opts.col.w * 0.32;
+    var height = opts.lead * (cluster.role === 'vertical-rail' ? 7 : cluster.role === 'side-spacer' ? 4 : 2.5);
+    // Simplification reduces the occupied zone, never silently changes which
+    // approved pieces the family selected.
+    if (policy === 'simplify') { width *= 0.8; height *= 0.75; }
+    var y = cluster.anchor.relation === 'after' ? opts.blockBottom[cluster.anchor.blockId] ?? anchorY : anchorY;
+    if (cluster.anchor.relation === 'before') y -= height;
+    var x = cluster.role === 'horizontal-divider' ? opts.col.x :
+      right ? opts.col.x + opts.col.w - width * 0.45 : opts.col.x - width * 0.55;
+    x = Math.max(opts.bounds.x, Math.min(x, opts.bounds.x + opts.bounds.w - width));
+    var box = {x,y:Math.max(opts.bounds.y || 0,y),w:width,h:height};
+    var packed = packBanner({fragments,box,density:cluster.density,
+      seed:cluster.clusterScatterSeed || opts.seed + '/' + cluster.clusterId,allowBleed:false});
+    for (var item of packed.items) {
+      var f = opts.byId[item.fragmentId];
+      out.push({...item, clusterId:cluster.clusterId,
+        placementId:cluster.clusterId + '/' + item.fragmentId,
+        wrapPriority:cluster.wrapPriority || 5,layerHint:'above-paper',
+        poly:geo.inflate(geo.placePoly(f.contour || [[0,0],[1,0],[1,1],[0,1]],item,item.rot),opts.gutter)});
+    }
+  }
+  return out;
+}
 
-export { packBanner, scatter };
+var API = { packBanner: packBanner, scatter: scatter, bodyClusters: bodyClusters };
+
+export { packBanner, scatter, bodyClusters };

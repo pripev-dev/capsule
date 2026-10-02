@@ -84,6 +84,28 @@ function capsule(blockList = blocks(9)) {
 const LETTER = { kind: "print", w: 816, h: 1056, pageH: 1056, widthInches: 8.5 };
 const A4 = { kind: "print", w: 794, h: 1123, pageH: 1123, widthInches: 8.27 };
 
+test("modern secondary heaps reach contour flow on screen and stay together on paper", () => {
+  const c=capsule(blocks(3)); c.schemaRevision=3;
+  const byId={a:{id:'a',aspect:1,contour:[[0,0],[1,0],[0.25,1],[0,1]],weight:'medium'},
+    b:{id:'b',aspect:1.4,contour:[[0,0],[1,0],[1,1],[0,1]],weight:'light'}};
+  c.compositions[0].intent.clusters=[{clusterId:'heap',role:'side-spacer',
+    anchor:{blockId:'blk_body_0',relation:'beside'},memberFragmentIds:['a','b'],density:0.75}];
+  for(const surface of [{kind:'screen',w:390,h:844},{kind:'screen',w:1200,h:900},A4]) {
+    const m=layout.composeSurface({capsule:c,surface,measure,fragmentsById:byId});
+    assert.equal(m.placements.length,2);
+    assert.ok(m.placements.every(p=>p.clusterId==='heap'&&p.poly.length===4));
+    const plain=structuredClone(c); plain.compositions[0].intent.clusters=[];
+    const baseline=layout.composeSurface({capsule:plain,surface,measure,fragmentsById:byId});
+    assert.notDeepEqual(m.flow,baseline.flow,'actual silhouettes must change reading flow');
+    if(m.page) {
+      const sheet=p=>Math.floor((p.y-m.page.top)/m.page.stride);
+      assert.equal(sheet(m.placements[0]),sheet(m.placements[1]));
+    }
+    const legacy=structuredClone(c); delete legacy.schemaRevision;
+    assert.equal(layout.composeSurface({capsule:legacy,surface,measure,fragmentsById:byId}).placements.length,0);
+  }
+});
+
 test("modern editorial print uses physical reading type rather than enlarged screen type", () => {
   const c = capsule(blocks(2)); c.schemaRevision = 3;
   for (const surface of [A4, LETTER]) {

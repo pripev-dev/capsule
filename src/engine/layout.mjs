@@ -271,7 +271,36 @@ function composeSurface(input) {
     lead: sizes.lead, bodyBottom: passA.bottom, keepOut: reservedGutters,
     gutter: Math.max(6, body * 0.55), mirror: mirror
   }).filter(function (p) { return surface.kind !== 'print' || p.y < passA.bottom; });
-  if (page) placements.forEach(function (p) { onOneSheet(p, page); });
+  if (modernEditorial) {
+    var blockBottom = {};
+    passA.items.forEach(function (it) {
+      if (it.blockId && it.box) blockBottom[it.blockId] = it.box.y + it.box.h;
+    });
+    placements = placements.concat(C.bodyClusters({
+      clusters:intent.clusters || [],byId:byId,blockY:passA.blockY,blockBottom:blockBottom,
+      seed:seed,surface:surface,col:{x:colX,w:colW},lead:sizes.lead,
+      bounds:{x:pad,y:flowTop,w:contentW},gutter:Math.max(6,body*0.55),mirror:mirror
+    }));
+  }
+  if (page) {
+    var heaps = new Map();
+    placements.forEach(function (p) {
+      if (!p.clusterId) { onOneSheet(p,page); return; }
+      if (!heaps.has(p.clusterId)) heaps.set(p.clusterId,[]);
+      heaps.get(p.clusterId).push(p);
+    });
+    heaps.forEach(function (members) {
+      var top = Math.min(...members.map(p=>p.y));
+      var bottom = Math.max(...members.map(p=>p.y+p.h));
+      var envelope = {y:top,h:bottom-top};
+      onOneSheet(envelope,page);
+      var dy = envelope.y-top;
+      members.forEach(function (p) {
+        p.y += dy;
+        p.poly = p.poly.map(pt=>[pt[0],pt[1]+dy]);
+      });
+    });
+  }
 
   // Pass B: the same text, wrapped round the real contours.
   var passB = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, placements, page, measure, rtl, banner.titleMeasure, opening);

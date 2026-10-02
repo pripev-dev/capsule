@@ -145,6 +145,9 @@ function validate(ctx) {
     for (var i = 0; i < model.placements.length; i++) {
       for (var j = i + 1; j < model.placements.length; j++) {
         var a = model.placements[i], b = model.placements[j];
+        // Overlap inside an authored heap is intentional; separate heaps and
+        // unrelated free fragments still face the ordinary collision refusal.
+        if (a.clusterId && a.clusterId === b.clusterId) continue;
         var ov = GEO.rectsOverlapArea(a, b);
         if (ov / Math.min(a.w * a.h, b.w * b.h) > 0.55)
           findings.push(fail('collision', a.placementId + '+' + b.placementId, 'Two scattered fragments sit on top of each other.', 'respace'));
