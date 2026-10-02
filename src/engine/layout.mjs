@@ -443,6 +443,20 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
                               // edge; a screen does not. That is a fact about the
                               // surface, not a kind of page.
                               allowBleed: !(surface.widthInches || surface.dpi) });
+  if (capsule.schemaRevision >= 3 && packed.items.length > 1) {
+    // Sparse decks exhaust their unique pieces before the occupancy grid can
+    // balance its top-left start. Move the complete heap, retaining every
+    // relative overlap, scale and rotation; include rotated image envelopes.
+    var left = Infinity, right = -Infinity;
+    packed.items.forEach(function (it) {
+      var angle = Math.abs(it.rot) * Math.PI / 180;
+      var width = it.w * Math.cos(angle) + it.h * Math.sin(angle);
+      left = Math.min(left, it.x + it.w / 2 - width / 2);
+      right = Math.max(right, it.x + it.w / 2 + width / 2);
+    });
+    var shift = bbox.x + bbox.w / 2 - (left + right) / 2;
+    packed.items.forEach(function (it) { it.x += shift; });
+  }
   if (mirror) packed.items.forEach(function (it) { it.x = bbox.x + bbox.w - (it.x - bbox.x) - it.w; it.rot = -it.rot; });
   return { box: bbox, items: packed.items, coverage: packed.coverage, typographic: false,
            kindsUsed: packed.kindsUsed, kindsAvailable: packed.kindsAvailable,
@@ -743,7 +757,10 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
       var groupInset = ctx.inset || 0;
       var framed = ['panel', 'story', 'register'].includes(ed.treatment);
       var space = ed.spacing === 'roomy' ? 1.5 : ed.spacing === 'compact' ? 0.6 : 1;
-      y += sz.gap * space;
+      // The enclosing group already introduced its first nested group. Modern
+      // pages give the next sibling ownership of the transition, so group-end
+      // and group-start spacing cannot accumulate into an empty paragraph.
+      y += sz.modernEditorial && ctx.first ? 0 : sz.gap * space;
       var panelTop = y, panelPad = framed ? Math.min(sz.body * 0.85, available * 0.07) : 0;
       var panel = { blockId:block.blockId, type:kind, kind:'container', containerOf:framed ? 'story' : 'list',
         depth:depth, block:block, ground:ed.treatment === 'story' ? 0.055 : 0.028,
@@ -777,7 +794,7 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
       y += panelPad;
       panel.box.h = y-panelTop;
       blockY[block.blockId]=panel.box.y;
-      y += sz.gap*space;
+      y += sz.modernEditorial ? 0 : sz.gap*space;
       return;
     }
 

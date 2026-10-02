@@ -46,3 +46,16 @@ earlier archived editions preserve the original sampling path.
 The synthetic check varies titles, hidden transcripts and nested body words
 independently. A real 390px botvinniki reading-container comparison places more
 words per line and reduces its opening size without altering approved text.
+
+Revision 3 centres the rotated envelope of a multi-piece opening heap.
+The occupancy grid starts at the top left and a sparse deck can finish before
+later pieces balance it. Moving the complete heap preserves its relative
+overlap, rotation and scale while balancing its horizontal paper margins.
+
+Modern editorial groups give the following sibling ownership of section
+spacing. A first nested group does not add another opening gap inside its
+parent; panel padding remains. Earlier archived editions keep their prior
+spacing. Synthetic screen, A4 and Letter checks cover the nested transition.
+A private rendered print comparison reduces the gap before the first numbered
+step from about 127px to 67px at the same print scale. This is an improvement,
+not an acceptance claim for the complete cookbook.

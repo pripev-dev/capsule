@@ -166,6 +166,43 @@ test("modern small collages leave space for voice and preserve unique source pro
   assert.equal(JSON.stringify(cap),before);
 });
 
+test("modern nested editorial groups do not stack section gaps before the first step", () => {
+  const ed=(treatment,spacing="regular")=>({treatment,spacing,fontRole:"text",emphasis:"normal"});
+  const cap=capsule([
+    {blockId:"blk_intro",type:"editorial-group",editorial:ed("set"),children:[
+      {blockId:"blk_intro_text",type:"paragraph",text:"Separate the eggs and keep the whites aside."}]},
+    {blockId:"blk_panel",type:"editorial-group",editorial:ed("panel","roomy"),children:[
+      {blockId:"blk_sequence",type:"editorial-group",editorial:ed("sequence"),children:[
+        {blockId:"blk_first_step",type:"paragraph",text:"Mix the yolks with flour and sugar."}]}]}
+  ]); cap.schemaRevision=3;
+  for(const surface of [SCREEN,A4,LETTER]) {
+    const model=layout.composeSurface({capsule:cap,surface,measure});
+    const intro=model.flow.find(it=>it.blockId==="blk_intro_text").box;
+    const first=model.flow.find(it=>it.blockId==="blk_first_step").box;
+    assert.ok(first.y-(intro.y+intro.h)<model.sizes.lead*3,
+      "one section transition and panel padding should fit within three reading lines");
+  }
+});
+
+test("modern sparse opening balances the selected heap across the paper", () => {
+  const cap=capsule(); cap.schemaRevision=3;
+  cap.compositions[0].intent.clusters=[{role:"opening-banner",memberFragmentIds:["frg_a","frg_b"],density:0.72}];
+  const fragmentsById=Object.fromEntries([1.5,1.7].map((aspect,i)=>{
+    const id=i?"frg_b":"frg_a"; return [id,{id,aspect,src:"",weight:"medium",mode:"normal"}];
+  }));
+  for(const surface of [SCREEN,A4,LETTER]) {
+    const model=layout.composeSurface({capsule:cap,surface,measure,fragmentsById});
+    const edges=model.banner.items.map(it=>{
+      const angle=Math.abs(it.rot)*Math.PI/180;
+      const width=it.w*Math.cos(angle)+it.h*Math.sin(angle);
+      return [it.x+it.w/2-width/2,it.x+it.w/2+width/2];
+    });
+    const centre=(Math.min(...edges.map(e=>e[0]))+Math.max(...edges.map(e=>e[1])))/2;
+    assert.ok(Math.abs(centre-(model.banner.box.x+model.banner.box.w/2))<0.01,
+      "rotated heap should leave balanced horizontal paper margins");
+  }
+});
+
 test("a single-piece opening is compact and keeps the rotated source whole on every surface", () => {
   const cap = capsule();
   cap.compositions[0].intent.clusters = [{ role: "opening-banner", memberFragmentIds: ["frg_only"], density: 0.94 }];
