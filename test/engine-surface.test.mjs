@@ -109,6 +109,27 @@ test("modern collapsed voice area reserves controls without an empty heading row
 });
 const SCREEN = { kind: "screen", w: 1180, h: 860 };
 
+test("modern small collages leave space for voice and preserve unique source proportions", () => {
+  const cap = capsule(); cap.schemaRevision = 3;
+  cap.compositions[0].intent.clusters = [{role:"opening-banner",memberFragmentIds:["frg_a","frg_b"],density:0.72}];
+  const fragmentsById = Object.fromEntries([1.5,0.8].map((aspect,i)=> {
+    const id = i ? "frg_b" : "frg_a";
+    return [id,{id,aspect,src:"",weight:"medium",mode:"normal"}];
+  }));
+  const before = JSON.stringify(cap);
+  for (const surface of [{kind:"screen",w:390,h:844},{kind:"screen",w:834,h:1112},SCREEN,A4,LETTER]) {
+    const model = layout.composeSurface({capsule:cap,surface,measure,fragmentsById});
+    assert.ok(model.banner.box.h <= model.sizes.lead * 6.5 + 0.01);
+    assert.equal(new Set(model.banner.items.map(i=>i.fragmentId)).size,2);
+    for(const item of model.banner.items) assert.ok(Math.abs(item.w/item.h-fragmentsById[item.fragmentId].aspect)<1e-9);
+    assert.deepEqual(model.banner,layout.composeSurface({capsule:cap,surface,measure,fragmentsById}).banner);
+    const legacy = structuredClone(cap); legacy.schemaRevision = 2;
+    const old = layout.composeSurface({capsule:legacy,surface,measure,fragmentsById});
+    assert.ok(model.banner.box.h <= old.banner.box.h);
+  }
+  assert.equal(JSON.stringify(cap),before);
+});
+
 test("a single-piece opening is compact and keeps the rotated source whole on every surface", () => {
   const cap = capsule();
   cap.compositions[0].intent.clusters = [{ role: "opening-banner", memberFragmentIds: ["frg_only"], density: 0.94 }];

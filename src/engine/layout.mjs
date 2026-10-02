@@ -426,6 +426,12 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
   // Keep its space in proportion to the reading rhythm rather than reserving
   // the full collage band; no duplicate or unrelated asset fills the gap.
   if (frags.length === 1) h = Math.min(h, sizes.lead * 5.5);
+  // A small modern collage accompanies the voice rather than becoming a hero
+  // photograph. Limit its opening by the page's reading rhythm on every
+  // surface; older archived editions retain their established geometry.
+  if (capsule.schemaRevision >= 3 && frags.length > 1) {
+    h = Math.min(h, sizes.lead * (frags.length === 2 ? 6.5 : 8.5));
+  }
   var bbox = { x: box.x, y: box.y, w: box.w, h: h };
   if (frags.length === 1) {
     bbox.w = Math.min(box.w, h * Math.max(0.01, frags[0].aspect || 1) + sizes.body * 2);
