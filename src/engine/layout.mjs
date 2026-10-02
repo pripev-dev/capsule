@@ -174,7 +174,9 @@ function composeSurface(input) {
   var bleed = { x: bleedPad, y: 0, w: surface.w - bleedPad * 2, h: 0 };
 
   // Type scale from the family's own text: measure what she actually said.
-  var sample = (capsule.blocks || []).map(function (b) { return b.text || ''; }).join(' ').slice(0, 600) || ' ';
+  var modernEditorial = capsule.schemaRevision >= 3;
+  var sample = modernEditorial ? readingSample(capsule.blocks || [])
+    : (capsule.blocks || []).map(function (b) { return b.text || ''; }).join(' ').slice(0, 600) || ' ';
   var advText = measure(sample, fonts.text) / T.REF / Math.max(1, sample.length);
   // The measure is set in characters, from the space available and how far away
   // that space is held - a sheet at arm's length carries more of them than a
@@ -190,7 +192,6 @@ function composeSurface(input) {
   // reading type at arm's length, not the enlarged screen measure. Keep the
   // physical 12pt floor and cap the body at 13pt; headings retain their roles.
   // Earlier prototype editions retain their measured geometry.
-  var modernEditorial = capsule.schemaRevision >= 3;
   if (pt && modernEditorial) body = Math.max(floorPx, Math.min(body, 13 * pt.pxPerPt));
   var leadScale = (tok.rhythm && tok.rhythm.leadingScale) || 1.5;
   var lead = body * leadScale;
@@ -524,6 +525,26 @@ var TEXT_TYPES = { title: 'display', 'step-group': 'section', 'ingredient-group'
                    'checklist-item': 'text', 'ordered-item': 'text', 'bullet-item': 'text',
                    'head-field': 'caption', 'head-line': 'caption',
                    'story-line': 'accent' };
+
+// Measure the reading words, including those nested in editorial groups.
+// A top-level title is not representative of a recipe's glyph widths. Hidden
+// transcript fields are deliberately not visited; they have their own layout.
+function readingSample(blocks) {
+  var reading = [], fallback = [];
+  function visit(list) {
+    list.forEach(function (block) {
+      if (typeof block.text === 'string' && block.text.trim()) {
+        fallback.push(block.text);
+        var role = block.editorial && block.editorial.fontRole || TEXT_TYPES[block.type] || 'text';
+        if ((!block.children || !block.children.length) && role === 'text' &&
+            block.type !== 'media' && block.type !== 'voice-chapter') reading.push(block.text);
+      }
+      if (block.children) visit(block.children);
+    });
+  }
+  visit(blocks);
+  return (reading.length ? reading : fallback).join(' ').slice(0, 600) || ' ';
+}
 
 // The containers. A list is a marker gutter and a set of leaves hung off it; a
 // story is a narrower measure, looser leading and its own ground. Both are

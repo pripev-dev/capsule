@@ -36,3 +36,13 @@ space between collage and title is reduced to fit the same reading flow.
 Legacy editions retain their prior spacing. A private botvinniki comparison
 shows the first preparation instructions in the opening desktop viewport;
 this does not by itself establish final phone, print or aesthetic quality.
+
+Revision 3 samples nested reading text when estimating average glyph width.
+Top-level titles and hidden transcript fields no longer determine body size
+when actual reading leaves are available. Titles remain measured for their
+own wrapping. Documents without reading leaves use visible text as a fallback;
+earlier archived editions preserve the original sampling path.
+
+The synthetic check varies titles, hidden transcripts and nested body words
+independently. A real 390px botvinniki reading-container comparison places more
+words per line and reduces its opening size without altering approved text.

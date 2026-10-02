@@ -109,6 +109,22 @@ test("modern collapsed voice area reserves controls without an empty heading row
 });
 const SCREEN = { kind: "screen", w: 1180, h: 860 };
 
+test("modern body sizing follows nested reading words rather than title or hidden transcript", () => {
+  const c = capsule([{blockId:"blk_title",type:"title",text:"WWWWWW"},
+    {blockId:"blk_voice",type:"media",transcriptText:"WWWWWW",transcript:{expandedByDefault:false}},
+    {blockId:"blk_group",type:"editorial-group",editorial:{treatment:"panel",fontRole:"text",emphasis:"normal",spacing:"regular"},
+      children:[{blockId:"blk_body",type:"paragraph",text:"mmmm mmmm mmmm"}]}]);
+  c.schemaRevision = 3;
+  const glyphMeasure = text => [...text].reduce((sum,ch)=>sum+(ch==="W"?90:ch==="i"?20:ch===" "?25:50),0);
+  const surface = {kind:"screen",w:390,h:844};
+  const first = layout.composeSurface({capsule:c,surface,measure:glyphMeasure});
+  const retitled = structuredClone(c); retitled.blocks[0].text="iiiiii";
+  retitled.blocks[1].transcriptText="iiiiii";
+  assert.equal(layout.composeSurface({capsule:retitled,surface,measure:glyphMeasure}).sizes.body,first.sizes.body);
+  retitled.blocks[2].children[0].text="iiii iiii iiii";
+  assert.notEqual(layout.composeSurface({capsule:retitled,surface,measure:glyphMeasure}).sizes.body,first.sizes.body);
+});
+
 test("modern voice and first recipe group do not accumulate two section gaps", () => {
   const c = capsule([{blockId:"blk_title",type:"title",text:"Synthetic recipe"},
     {blockId:"blk_voice",type:"media",transcript:{expandedByDefault:false}},
