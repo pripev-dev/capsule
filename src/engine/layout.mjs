@@ -473,18 +473,27 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
                               // surface, not a kind of page.
                               allowBleed: !(surface.widthInches || surface.dpi) });
   if (capsule.schemaRevision >= 3 && packed.items.length > 1) {
-    // Sparse decks exhaust their unique pieces before the occupancy grid can
-    // balance its top-left start. Move the complete heap, retaining every
-    // relative overlap, scale and rotation; include rotated image envelopes.
-    var left = Infinity, right = -Infinity;
+    // Fit the complete rotated heap, not its unrotated image rectangles.
+    // A common transform preserves overlaps and relative source sizes while
+    // keeping actual source edges clear of the sheet and following words.
+    var left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
     packed.items.forEach(function (it) {
       var angle = Math.abs(it.rot) * Math.PI / 180;
       var width = it.w * Math.cos(angle) + it.h * Math.sin(angle);
+      var height = it.h * Math.cos(angle) + it.w * Math.sin(angle);
       left = Math.min(left, it.x + it.w / 2 - width / 2);
       right = Math.max(right, it.x + it.w / 2 + width / 2);
+      top = Math.min(top,it.y+it.h/2-height/2);
+      bottom = Math.max(bottom,it.y+it.h/2+height/2);
     });
-    var shift = bbox.x + bbox.w / 2 - (left + right) / 2;
-    packed.items.forEach(function (it) { it.x += shift; });
+    var scale = Math.min(1,bbox.w/(right-left),bbox.h/(bottom-top));
+    var x = bbox.x+(bbox.w-(right-left)*scale)/2;
+    var y = bbox.y+(bbox.h-(bottom-top)*scale)/2;
+    packed.items.forEach(function (it) {
+      it.x=x+(it.x-left)*scale; it.y=y+(it.y-top)*scale;
+      it.w*=scale; it.h*=scale;
+    });
+    packed.coverage *= scale*scale;
   }
   if (mirror) packed.items.forEach(function (it) { it.x = bbox.x + bbox.w - (it.x - bbox.x) - it.w; it.rot = -it.rot; });
   return { box: bbox, items: packed.items, coverage: packed.coverage, typographic: false,

@@ -51,6 +51,12 @@ Revision 3 centres the rotated envelope of a multi-piece opening heap.
 The occupancy grid starts at the top left and a sparse deck can finish before
 later pieces balance it. Moving the complete heap preserves its relative
 overlap, rotation and scale while balancing its horizontal paper margins.
+The complete rotated envelope is also fitted inside its opening zone with a
+common scale and offset. This preserves relative source proportions and
+overlaps while clearing the sheet edge and following words. The renderer can
+therefore expose each asset's own edge without a rectangular clipping mask.
+Synthetic portrait, desktop, A4 and Letter checks cover wide and tall sources;
+the real narrow recipe was inspected without another paid composition.
 
 Modern editorial groups give the following sibling ownership of section
 spacing. A first nested group does not add another opening gap inside its

@@ -206,6 +206,24 @@ test("modern nested editorial groups do not stack section gaps before the first 
   }
 });
 
+test('modern opening preserves all rotated source envelopes without rectangular clipping', () => {
+  const c=capsule(); c.schemaRevision=3;
+  const byId=Object.fromEntries([0.45,1.7,3.5].map((aspect,i)=>['frg_'+i,{id:'frg_'+i,aspect,weight:'medium'}]));
+  c.compositions[0].intent.clusters=[{role:'opening-banner',memberFragmentIds:Object.keys(byId),density:0.94}];
+  for(const surface of [{kind:'screen',w:390,h:844},SCREEN,A4,LETTER]) {
+    const m=layout.composeSurface({capsule:c,surface,measure,fragmentsById:byId});
+    for(const p of m.banner.items) {
+      const angle=Math.abs(p.rot)*Math.PI/180;
+      const w=p.w*Math.cos(angle)+p.h*Math.sin(angle),h=p.h*Math.cos(angle)+p.w*Math.sin(angle);
+      assert.ok(p.x+p.w/2-w/2>=m.banner.box.x-0.01);
+      assert.ok(p.x+p.w/2+w/2<=m.banner.box.x+m.banner.box.w+0.01);
+      assert.ok(p.y+p.h/2-h/2>=m.banner.box.y-0.01);
+      assert.ok(p.y+p.h/2+h/2<=m.banner.box.y+m.banner.box.h+0.01);
+      assert.ok(Math.abs(p.w/p.h-byId[p.fragmentId].aspect)<1e-9);
+    }
+  }
+});
+
 test("modern sparse opening balances the selected heap across the paper", () => {
   const cap=capsule(); cap.schemaRevision=3;
   cap.compositions[0].intent.clusters=[{role:"opening-banner",memberFragmentIds:["frg_a","frg_b"],density:0.72}];
