@@ -73,3 +73,13 @@ spacing. Synthetic screen, A4 and Letter checks cover the nested transition.
 A private rendered print comparison reduces the gap before the first numbered
 step from about 127px to 67px at the same print scale. This is an improvement,
 not an acceptance claim for the complete cookbook.
+
+Clusters may now declare `groundFragmentIds` and one `focalFragmentId` among
+their existing members. These are editorial roles, not geometry. The contract
+refuses nonmember assignments and a focal object also named as a ground. The
+packer paints grounds first, other members next and the focal object last,
+without changing source sizes, contours, rotation or placement. Both opening
+and body heaps use the same ordering; omitted roles preserve established output.
+A real private paper-and-bowl comparison keeps the bowl visible above its paper
+layer. Agent tool wiring and consumer pin alignment remain work, as do broader
+occlusion guarantees and final surface acceptance.

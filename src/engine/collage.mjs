@@ -117,6 +117,13 @@ function packBanner(opts) {
   }
   var cov = 0; for (var i = 0; i < grid.length; i++) cov += Math.min(1, grid[i]);
   var kinds = Object.keys(timesUsed).filter(function (k) { return timesUsed[k] > 0; });
+  // Weight sizes a piece; editorial role decides which piece must remain
+  // visible. Paper grounds cannot paint over the selected focal object.
+  var grounds = new Set(opts.groundFragmentIds || []);
+  var rank = item => grounds.has(item.fragmentId) ? 0 :
+    item.fragmentId === opts.focalFragmentId ? 2 : 1;
+  items.sort((a,b)=>rank(a)-rank(b));
+  items.forEach((item,index)=>{item.z=index;});
   return { items: items, coverage: cov / grid.length, cellCoverage: Array.from(grid),
            kindsUsed: kinds.length, kindsAvailable: deck.length, timesUsed: timesUsed,
            perKindCap: perKindCap };
@@ -256,7 +263,8 @@ function bodyClusters(opts) {
     x = Math.max(opts.bounds.x, Math.min(x, opts.bounds.x + opts.bounds.w - width));
     var box = {x,y:Math.max(opts.bounds.y || 0,y),w:width,h:height};
     var packed = packBanner({fragments,box,density:cluster.density,
-      seed:cluster.clusterScatterSeed || opts.seed + '/' + cluster.clusterId,allowBleed:false});
+      seed:cluster.clusterScatterSeed || opts.seed + '/' + cluster.clusterId,allowBleed:false,
+      groundFragmentIds:cluster.groundFragmentIds,focalFragmentId:cluster.focalFragmentId});
     for (var item of packed.items) {
       var f = opts.byId[item.fragmentId];
       out.push({...item, clusterId:cluster.clusterId,

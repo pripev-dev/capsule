@@ -257,6 +257,13 @@ export function checkApprovedFragmentsOnly(capsule) {
   const used = [];
   for (const [i, composition] of (capsule.compositions ?? []).entries()) {
     for (const cluster of composition.intent?.clusters ?? []) {
+      const members = new Set(cluster.memberFragmentIds ?? []);
+      const grounds = new Set(cluster.groundFragmentIds ?? []);
+      for (const id of new Set([...grounds, ...(cluster.focalFragmentId ? [cluster.focalFragmentId] : [])])) {
+        if (!members.has(id) || (id === cluster.focalFragmentId && grounds.has(id))) {
+          used.push({ pointer: `/compositions/${i}/intent/clusters`, id, invalidRole: true });
+        }
+      }
       for (const id of cluster.memberFragmentIds ?? []) {
         used.push({ pointer: `/compositions/${i}/intent/clusters`, id, decoration: true });
       }
@@ -268,7 +275,7 @@ export function checkApprovedFragmentsOnly(capsule) {
       used.push({ pointer: `/compositions/${i}/intent/tokens/palette`, id });
     }
   }
-  return used.filter(item => !approved.has(item.id) && !(item.decoration && decoration.has(item.id)))
+  return used.filter(item => item.invalidRole || (!approved.has(item.id) && !(item.decoration && decoration.has(item.id))))
     .map(({ pointer, id }) => ({ pointer, id }));
 }
 

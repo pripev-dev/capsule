@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bodyClusters } from '../src/engine/collage.mjs';
+import { bodyClusters, packBanner } from '../src/engine/collage.mjs';
+import { checkApprovedFragmentsOnly } from '../src/validate/index.mjs';
 
 const contour = [[0,0],[1,0],[0.25,1],[0,1]];
 const byId = { a:{id:'a',aspect:1,contour}, b:{id:'b',aspect:1.5,contour} };
@@ -9,6 +10,36 @@ const opts = { byId, blockY:{body:180}, blockBottom:{body:360}, seed:'page',
   gutter:8, bounds:{x:30,w:740} };
 const cluster = role => ({clusterId:'c',role,anchor:{blockId:'body',relation:'beside'},
   memberFragmentIds:['a','b'],density:0.7,wrapPriority:4});
+
+test('opening layer intent changes paint order without changing source geometry', () => {
+  const options={fragments:Object.values(byId),box:{x:30,y:30,w:400,h:200},density:0.7,seed:'roles'};
+  const before=packBanner(options),after=packBanner({...options,groundFragmentIds:['b'],focalFragmentId:'a'});
+  assert.deepEqual(after.items.map(p=>p.fragmentId),['b','a']);
+  for (const item of before.items) {
+    const changed=after.items.find(p=>p.fragmentId===item.fragmentId);
+    for (const key of ['x','y','w','h','rot']) assert.equal(changed[key],item[key]);
+  }
+});
+
+test('declared paper grounds paint before the focal object on every surface', () => {
+  const c={...cluster('side-spacer'),groundFragmentIds:['b'],focalFragmentId:'a'};
+  for (const surface of [{kind:'screen',w:390,h:844},{kind:'screen',w:1200,h:900},{kind:'print',w:794,h:1123}]) {
+    const items=bodyClusters({...opts,surface,clusters:[c]});
+    assert.deepEqual(items.map(p=>p.fragmentId),['b','a']);
+    assert.ok(items[0].z<items[1].z);
+    assert.equal(items.length,2);
+  }
+});
+
+test('editorial layer roles cannot introduce nonmembers or make the focal object a ground', () => {
+  const c={...cluster('side-spacer'),groundFragmentIds:['b'],focalFragmentId:'a'};
+  const page={visualPack:{approvedFragmentIds:['a','b','other']},compositions:[{intent:{clusters:[c]}}]};
+  assert.deepEqual(checkApprovedFragmentsOnly(page),[]);
+  for (const change of [x=>x.focalFragmentId='other',x=>x.groundFragmentIds=['other'],x=>x.groundFragmentIds=['a']]) {
+    const bad=structuredClone(page);change(bad.compositions[0].intent.clusters[0]);
+    assert.equal(checkApprovedFragmentsOnly(bad).length,1);
+  }
+});
 
 test('secondary clusters retain distinct members and their actual contour blockers', () => {
   for(const role of ['vertical-rail','horizontal-divider','side-spacer']) {

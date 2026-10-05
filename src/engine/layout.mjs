@@ -481,6 +481,7 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
     bbox.x += (box.w - bbox.w) / 2;
   }
   var packed = C.packBanner({ fragments: frags, box: bbox, density: cluster.density, seed: seed,
+                              groundFragmentIds:cluster.groundFragmentIds,focalFragmentId:cluster.focalFragmentId,
                               // A sheet that declared its physical size has a real
                               // edge; a screen does not. That is a fact about the
                               // surface, not a kind of page.
