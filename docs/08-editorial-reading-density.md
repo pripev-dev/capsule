@@ -58,6 +58,14 @@ therefore expose each asset's own edge without a rectangular clipping mask.
 Synthetic portrait, desktop, A4 and Letter checks cover wide and tall sources;
 the real narrow recipe was inspected without another paid composition.
 
+Wide modern openings pair the title and recording column with the declared
+collage when an intact title word, usable controls and readable artwork fit.
+The collage can use the page margin beyond the reading measure. Narrow or
+insufficient measures retain the stacked order. The recording is measured
+at its actual available width, including an expanded transcript; following
+recipe blocks clear both the recording and the opening heap. No source block
+is changed. The real Cyrillic opening was inspected at a 1000px page width.
+
 Modern editorial groups give the following sibling ownership of section
 spacing. A first nested group does not add another opening gap inside its
 parent; panel padding remains. Earlier archived editions keep their prior

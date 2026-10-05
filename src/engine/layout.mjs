@@ -239,7 +239,7 @@ function composeSurface(input) {
   // With photographs the words begin under the heap. Without them the title is
   // the opening: it sits on the torn ground itself, so the page starts with her
   // saying what this is instead of with an empty band.
-  var flowTop = banner.typographic
+  var flowTop = banner.typographic || banner.readingMeasure
     ? banner.box.y + gapUnit * 1.15
     : banner.box.y + banner.box.h + gapUnit * (modernEditorial ? 0.75 : 1.35);
 
@@ -250,7 +250,7 @@ function composeSurface(input) {
   var opening = banner.typographic ? banner.box.y + banner.box.h : null;
 
   // Pass A: where do the blocks fall with nothing in the way.
-  var passA = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, [], page, measure, rtl, banner.titleMeasure, opening);
+  var passA = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, [], page, measure, rtl, banner.titleMeasure, opening, banner.readingMeasure ? banner : null);
 
   // The engine turns the skill's anchors into rectangles, now that it knows
   // where the anchored blocks are.
@@ -303,7 +303,7 @@ function composeSurface(input) {
   }
 
   // Pass B: the same text, wrapped round the real contours.
-  var passB = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, placements, page, measure, rtl, banner.titleMeasure, opening);
+  var passB = flowBlocks(capsule, fonts, sizes, colX, colW, flowTop, placements, page, measure, rtl, banner.titleMeasure, opening, banner.readingMeasure ? banner : null);
 
   var built = buildMarks(passB, tok, seed);
   var legendRows = (capsule.legend || []).length
@@ -463,6 +463,19 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
     h = Math.min(h, sizes.lead * (frags.length === 2 ? 6.5 : 8.5));
   }
   var bbox = { x: box.x, y: box.y, w: box.w, h: h };
+  var readingMeasure = null;
+  if (capsule.schemaRevision >= 3 && surface.w >= 760 && titleBlock && frags.length > 1) {
+    var titleWords = T.prepare(titleBlock.text || '',fonts.display || fonts.text,measure);
+    var widest = titleWords.atoms.reduce(function (w,a) { return a.space ? w : Math.max(w,a.w*sizes.display); },0);
+    var proposed = Math.max(colW*0.55,widest+sizes.body, sizes.body*12);
+    var gutter = sizes.body*1.2;
+    // Intact title words and usable recording controls take priority over a
+    // paired opening. Narrow measures retain the stacked reading order.
+    if (proposed <= colW && box.x+box.w-colX-proposed-gutter >= sizes.body*5) {
+      readingMeasure = proposed;
+      bbox.x=colX+proposed+gutter; bbox.w=box.x+box.w-bbox.x;
+    }
+  }
   if (frags.length === 1) {
     bbox.w = Math.min(box.w, h * Math.max(0.01, frags[0].aspect || 1) + sizes.body * 2);
     bbox.x += (box.w - bbox.w) / 2;
@@ -498,7 +511,8 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
   if (mirror) packed.items.forEach(function (it) { it.x = bbox.x + bbox.w - (it.x - bbox.x) - it.w; it.rot = -it.rot; });
   return { box: bbox, items: packed.items, coverage: packed.coverage, typographic: false,
            kindsUsed: packed.kindsUsed, kindsAvailable: packed.kindsAvailable,
-           edge: P.tornRect(bbox, seed + '/banner'), title: titleBlock ? titleBlock.text : '' };
+           edge: P.tornRect(bbox, seed + '/banner'), title: titleBlock ? titleBlock.text : '',
+           ...(readingMeasure ? {readingMeasure:readingMeasure,titleMeasure:readingMeasure} : {}) };
 }
 
 // A photograph is never cut by a sheet break. The scatter places a cutout by
@@ -608,7 +622,7 @@ var LIST_MARKER = { checklist: 'checkbox', 'ordered-list': 'number', 'bullet-lis
 // mirrored edition cannot reorder her sentence and an unmirrored one cannot
 // straighten an Arabic one. The collage still mirrors surface-wide - that is a
 // physical arrangement and belongs to the reader, not to her words.
-function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measure, editionRtl, titleMeasure, openingBottom) {
+function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measure, editionRtl, titleMeasure, openingBottom, pairedOpening) {
   var items = [], blockY = {}, y = top;
   var blocks = capsule.blocks || [];
 
@@ -991,15 +1005,17 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
 
     if (kind === 'media' || kind === 'voice-chapter' || kind === 'clarification-note' ||
         kind === 'artifact-figure' || kind === 'addition') {
+      var reservedW = pairedOpening && (kind === 'media' || kind === 'voice-chapter') &&
+        y < pairedOpening.box.y+pairedOpening.box.h ? pairedOpening.readingMeasure-indent : colW-indent;
       var h = block.reservedHeight != null ? block.reservedHeight
-            : mediaHeight(block, kind, fonts, sz, colW - indent, measure);
+            : mediaHeight(block, kind, fonts, sz, reservedW, measure);
       // A reserved block is a single object - a player with its transcript, a
       // figure with its caption - and it is never cut. If it is taller than the
       // paper it starts at a sheet top and overruns, which the audit reports.
       y = advancePastBreak(y, Math.min(h + sz.gap, page ? usableSheet() : h + sz.gap));
       blockY[block.blockId] = y;
       items.push({ blockId: block.blockId, type: kind, kind: 'reserved', depth: depth, block: block,
-                   box: { x: colX + indent, y: y, w: colW - indent, h: h } });
+                   box: { x: colX + indent, y: y, w: reservedW, h: h } });
       // Modern editorial blocks own their own leading separation. Adding a
       // second section gap after the player creates an empty band before the
       // first recipe group. Reserve only the controls here; the next block
@@ -1110,7 +1126,12 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
   // A player tucked under the title may overlap the torn ground; it covers
   // the rule and is meant to sit there. Anything else starts below it.
   var pendingOpening = null;
+  var pairedPending = !!pairedOpening;
   emitRun(blocks, function (b) {
+    if (pairedPending && b.type !== 'title' && b.type !== 'media' && b.type !== 'voice-chapter') {
+      y=Math.max(y,pairedOpening.box.y+pairedOpening.box.h+sz.gap*0.75);
+      pairedPending=false;
+    }
     if (pendingOpening != null && b.type !== 'media' && b.type !== 'voice-chapter') y = Math.max(y, pendingOpening);
     pendingOpening = null;
     emit(b, 0);

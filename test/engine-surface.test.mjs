@@ -206,6 +206,32 @@ test("modern nested editorial groups do not stack section gaps before the first 
   }
 });
 
+test('wide modern openings compose the title and recording beside the approved heap', () => {
+  const c=capsule([{blockId:'title',type:'title',text:'Family preparation'},
+    {blockId:'voice',type:'media',transcript:{expandedByDefault:false}},
+    {blockId:'body',type:'paragraph',text:PARAGRAPH}]); c.schemaRevision=3;
+  c.compositions[0].intent.clusters=[{role:'opening-banner',memberFragmentIds:['a','b'],density:0.72}];
+  const byId={a:{id:'a',aspect:1,weight:'medium'},b:{id:'b',aspect:1.5,weight:'light'}};
+  const before=JSON.stringify(c);
+  const m=layout.composeSurface({capsule:c,surface:SCREEN,measure,fragmentsById:byId});
+  const title=m.flow.find(b=>b.blockId==='title'),voice=m.flow.find(b=>b.blockId==='voice');
+  assert.ok(title.box.y<m.banner.box.y+m.banner.box.h);
+  assert.ok(voice.box.x+voice.box.w<=m.banner.box.x);
+  assert.ok(m.flow.find(b=>b.blockId==='body').box.y>=m.banner.box.y+m.banner.box.h);
+  assert.equal(JSON.stringify(c),before);
+  const phone=layout.composeSurface({capsule:c,surface:{kind:'screen',w:390,h:844},measure,fragmentsById:byId});
+  assert.ok(phone.flow.find(b=>b.blockId==='title').box.y>=phone.banner.box.y+phone.banner.box.h);
+  const expanded=structuredClone(c); expanded.blocks[1].transcript.expandedByDefault=true;
+  expanded.blocks[1].transcriptText=PARAGRAPH.repeat(3);
+  const open=layout.composeSurface({capsule:expanded,surface:SCREEN,measure,fragmentsById:byId});
+  const openVoice=open.flow.find(b=>b.blockId==='voice');
+  assert.ok(openVoice.box.h>voice.box.h);
+  assert.ok(open.flow.find(b=>b.blockId==='body').box.y>=openVoice.box.y+openVoice.box.h);
+  const long=structuredClone(c); long.blocks[0].text='A'.repeat(100);
+  const fallback=layout.composeSurface({capsule:long,surface:SCREEN,measure,fragmentsById:byId});
+  assert.equal(fallback.banner.readingMeasure,undefined);
+});
+
 test('modern opening preserves all rotated source envelopes without rectangular clipping', () => {
   const c=capsule(); c.schemaRevision=3;
   const byId=Object.fromEntries([0.45,1.7,3.5].map((aspect,i)=>['frg_'+i,{id:'frg_'+i,aspect,weight:'medium'}]));
