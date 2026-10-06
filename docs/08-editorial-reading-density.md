@@ -83,3 +83,19 @@ and body heaps use the same ordering; omitted roles preserve established output.
 A real private paper-and-bowl comparison keeps the bowl visible above its paper
 layer. Agent tool wiring and consumer pin alignment remain work, as do broader
 occlusion guarantees and final surface acceptance.
+
+Modern circled quantities now request a kept reading range. When the full
+marked phrase fits the block's reading measure, the line breaker moves it
+intact past a line tail or a temporary contour sliver. This prevents a circle
+from silently dropping the quantity word after wrapping. Source text, atom
+offsets and authored mark ranges remain unchanged; older editions retain
+their line breaks. Ranges wider than the entire measure still wrap normally
+and require separate treatment rather than overflowing the page.
+Waiting past contour slivers is bounded to 32 empty bands. A permanently
+constrained shape falls back to ordinary wrapping so the layout guard cannot
+discard the remaining source; such split marks still require review.
+
+A failing synthetic regression reproduced the lost part of a marked phrase.
+Checks cover ordinary and contour flow, right-to-left placement, overlong
+ranges, source immutability and integration on phone, desktop, A4 and Letter.
+Consumer alignment and actual family render inspection remain required.

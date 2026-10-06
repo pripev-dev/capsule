@@ -251,6 +251,22 @@ test('an above-title opening keeps the approved collage across the reading width
   assert.equal(JSON.stringify(c),before);
 });
 
+test('modern circled quantities stay complete across screen and print flow', () => {
+  const text='Mix slowly with three small cups of flour. Stir the mixture gently.';
+  const start=text.indexOf('three'),end=start+'three small cups'.length;
+  const c=capsule([{blockId:'quantity',type:'paragraph',text,marks:[{type:'circle',start,end}]}]);
+  c.schemaRevision=3;
+  const before=JSON.stringify(c);
+  for(const surface of [SCREEN,{kind:'screen',w:390,h:844},A4,LETTER]) {
+    const m=layout.composeSurface({capsule:c,surface,measure});
+    const passage=m.flow.find(it=>it.blockId==='quantity');
+    assert.equal(textlayout.spanBoxes({lines:passage.lines},start,end,passage.size).length,1);
+    assert.ok(passage.lines.some(line=>line.text.includes('three small cups')));
+    assert.equal(m.marks.filter(mark=>mark.blockId==='quantity'&&mark.type==='circle').length,1);
+  }
+  assert.equal(JSON.stringify(c),before);
+});
+
 test('modern opening preserves all rotated source envelopes without rectangular clipping', () => {
   const c=capsule(); c.schemaRevision=3;
   const byId=Object.fromEntries([0.45,1.7,3.5].map((aspect,i)=>['frg_'+i,{id:'frg_'+i,aspect,weight:'medium'}]));

@@ -80,6 +80,15 @@ function prepare(text, fontSpec, measure) {
 function layout(prepared, opts) {
   var size = opts.size, lead = opts.leading * size;
   var lines = [], y = opts.y, i = 0, atoms = prepared.atoms;
+  var keeps = Object.create(null);
+  var keepWait = Object.create(null);
+  (opts.keepTogetherRanges || []).forEach(function (range) {
+    var first = atoms.findIndex(function (a) { return !a.space && a.end > range.start && a.start < range.end; });
+    if (first < 0) return;
+    var width = 0;
+    for (var k = first; k < atoms.length && atoms[k].start < range.end; k++) width += atoms[k].w * size;
+    if (width <= opts.maxLine) keeps[first] = Math.max(keeps[first] || 0, width);
+  });
   var guard = 0;
   while (i < atoms.length && guard++ < 4000) {
     // Spaces never open a line. Skipped before the band is asked for, because a
@@ -95,6 +104,17 @@ function layout(prepared, opts) {
     if (iv[1] - iv[0] < opts.minLine) { y += lead; continue; }
     var lineAtoms = [], x = 0, j = i;
     while (j < atoms.length) {
+      // A short authored quantity belongs on one line. Move it past a line
+      // tail or contour sliver rather than dropping part of its circle later.
+      // Overlong ranges retain ordinary wrapping; no source atom is changed.
+      // A permanently constrained shape must not consume the layout guard
+      // and omit the remaining source. Fall back to ordinary wrapping after
+      // bounded waiting; full-span mark treatment then remains a review issue.
+      if (keeps[j] && x + keeps[j] > iv[1] - iv[0] &&
+          (lineAtoms.length || (keepWait[j] || 0) < 32)) {
+        if (!lineAtoms.length) keepWait[j] = (keepWait[j] || 0) + 1;
+        break;
+      }
       var w = atoms[j].w * size;
       if (x + w > (iv[1] - iv[0]) && lineAtoms.length) break;
       lineAtoms.push(atoms[j]); x += w; j++;

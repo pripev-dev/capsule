@@ -273,6 +273,31 @@ test("a mark is one gesture or one per line, and every kind is drawable", () => 
   assert.notDeepEqual(first, second);
 });
 
+test('a kept quantity moves intact to the next line without changing source atoms', () => {
+  const text='Mix slowly with three small cups of flour.';
+  const prepared=textlayout.prepare(text,{stack:'serif',key:'quantity'},textlayout.makeMetricMeasurer());
+  const start=text.indexOf('three'),end=start+'three small cups'.length;
+  const before=JSON.stringify(prepared);
+  const opts={size:20,leading:1.5,y:0,minLine:1,maxLine:240,shapeFor:()=>[[0,240]]};
+  const ordinary=textlayout.layout(prepared,opts);
+  assert.ok(textlayout.spanBoxes(ordinary,start,end,20).length>1);
+  const kept=textlayout.layout(prepared,{...opts,keepTogetherRanges:[{start,end}]});
+  assert.equal(textlayout.spanBoxes(kept,start,end,20).length,1);
+  assert.ok(kept.lines.some(line=>line.text.includes('three small cups')));
+  assert.equal(JSON.stringify(prepared),before);
+  const around=textlayout.layout(prepared,{...opts,rtl:true,keepTogetherRanges:[{start,end}],
+    shapeFor:y=>[[0,y<60?100:240]]});
+  assert.equal(textlayout.spanBoxes(around,start,end,20).length,1);
+  assert.ok(around.lines.some(line=>line.text.includes('three small cups')));
+  const narrow=textlayout.layout(prepared,{...opts,maxLine:100,shapeFor:()=>[[0,100]],
+    keepTogetherRanges:[{start,end}]});
+  assert.equal(narrow.lines.map(line=>line.text).join(' ').replace(/\s+/g,' '),text);
+  const constrained=textlayout.layout(prepared,{...opts,shapeFor:()=>[[0,100]],
+    keepTogetherRanges:[{start,end}]});
+  assert.equal(constrained.lines.map(line=>line.text).join(' ').replace(/\s+/g,' '),text);
+  assert.ok(constrained.lines.length>0 && constrained.bottom<2000);
+});
+
 test("a text ending in a space that does not fit gets no extra, empty line", () => {
   // The agent's blocks often end in a space. When the last word filled its
   // line exactly, the space was left over and the layout gave it a line of its

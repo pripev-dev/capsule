@@ -1066,6 +1066,9 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
     var blockRtl = T.directionOf(block.text, editionRtl ? 'rtl' : 'ltr') === 'rtl';
     function layoutAt(yy) {
       return T.layout(prepared, { size: size, leading: leading / size, y: yy,
+                                    maxLine: ownW,
+                                    keepTogetherRanges: capsule.schemaRevision >= 3
+                                      ? (block.marks || []).filter(function (mk) { return mk.type === 'circle'; }) : [],
                                     shapeFor: shapeFor(x0, ownW, 0),
                                     // What counts as a usable line depends on how
                                     // big the type is. Six characters of body text
