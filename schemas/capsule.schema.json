@@ -879,6 +879,10 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["clusterId", "role", "anchor", "memberFragmentIds", "densityRange", "density"],
+      "allOf": [{
+        "if": { "required": ["openingFlow"] },
+        "then": { "properties": { "role": { "const": "opening-banner" } } }
+      }],
       "properties": {
         "clusterId": { "$ref": "common.schema.json#/$defs/clusterId" },
         "role": { "enum": ["opening-banner", "vertical-rail", "horizontal-divider", "side-spacer"] },
@@ -896,6 +900,7 @@
         "groundFragmentIds": { "type": "array", "uniqueItems": true,
                                "items": { "$ref": "common.schema.json#/$defs/visualAssetId" } },
         "focalFragmentId": { "$ref": "common.schema.json#/$defs/visualAssetId" },
+        "openingFlow": { "enum": ["above-title", "beside-title"] },
         "densityRange":  { "$ref": "common.schema.json#/$defs/normalizedRange" },
         "density":       { "$ref": "common.schema.json#/$defs/normalizedUnit" },
         "overlapRange":  { "$ref": "common.schema.json#/$defs/normalizedRange" },

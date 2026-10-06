@@ -459,12 +459,15 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
   // A small modern collage accompanies the voice rather than becoming a hero
   // photograph. Limit its opening by the page's reading rhythm on every
   // surface; older archived editions retain their established geometry.
-  if (capsule.schemaRevision >= 3 && frags.length > 1) {
+  if (capsule.schemaRevision >= 3 && frags.length > 1 && cluster.openingFlow !== 'above-title') {
     h = Math.min(h, sizes.lead * (frags.length === 2 ? 6.5 : 8.5));
   }
   var bbox = { x: box.x, y: box.y, w: box.w, h: h };
   var readingMeasure = null;
-  if (capsule.schemaRevision >= 3 && surface.w >= 760 && titleBlock && frags.length > 1) {
+  // A broad paper opening is an editorial reading order, not an agent-owned
+  // width. Older plans keep their paired opening; explicit stacked plans use
+  // the field's existing full-width band on every surface.
+  if (capsule.schemaRevision >= 3 && cluster.openingFlow !== 'above-title' && surface.w >= 760 && titleBlock && frags.length > 1) {
     var titleWords = T.prepare(titleBlock.text || '',fonts.display || fonts.text,measure);
     var widest = titleWords.atoms.reduce(function (w,a) { return a.space ? w : Math.max(w,a.w*sizes.display); },0);
     var proposed = Math.max(colW*0.55,widest+sizes.body, sizes.body*12);

@@ -33,6 +33,20 @@ const capsule = () => load("capsule.json");
 const evidenceMap = () => load("evidence-map.json");
 const fragments = () => load("visual-fragments.json");
 
+test('opening reading order accepts semantic choices only on opening clusters', () => {
+  for (const openingFlow of ['above-title','beside-title']) {
+    const doc=capsule(); doc.compositions[0].intent.clusters[0].openingFlow=openingFlow;
+    assert.equal(validate('capsule.schema.json',doc).valid,true);
+  }
+  for (const openingFlow of ['900px',{width:900}]) {
+    const doc=capsule(); doc.compositions[0].intent.clusters[0].openingFlow=openingFlow;
+    assert.equal(validate('capsule.schema.json',doc).valid,false);
+  }
+  const body=capsule(); body.compositions[0].intent.clusters[0].role='side-spacer';
+  body.compositions[0].intent.clusters[0].openingFlow='above-title';
+  assert.equal(validate('capsule.schema.json',body).valid,false);
+});
+
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
   if (value && typeof value === "object") {

@@ -232,6 +232,25 @@ test('wide modern openings compose the title and recording beside the approved h
   assert.equal(fallback.banner.readingMeasure,undefined);
 });
 
+test('an above-title opening keeps the approved collage across the reading width', () => {
+  const c=capsule([{blockId:'title',type:'title',text:'Family preparation'},
+    {blockId:'voice',type:'media',transcript:{expandedByDefault:false}},
+    {blockId:'body',type:'paragraph',text:PARAGRAPH}]); c.schemaRevision=3;
+  c.compositions[0].intent.clusters=[{role:'opening-banner',openingFlow:'above-title',
+    memberFragmentIds:['a','b'],density:0.72}];
+  const byId={a:{id:'a',aspect:1,weight:'medium'},b:{id:'b',aspect:1.5,weight:'light'}};
+  const before=JSON.stringify(c);
+  for(const surface of [SCREEN,{kind:'screen',w:390,h:844},A4,LETTER]) {
+    const m=layout.composeSurface({capsule:c,surface,measure,fragmentsById:byId});
+    const title=m.flow.find(b=>b.blockId==='title'),voice=m.flow.find(b=>b.blockId==='voice');
+    assert.equal(m.banner.readingMeasure,undefined);
+    assert.ok(title.box.y>=m.banner.box.y+m.banner.box.h);
+    assert.ok(voice.box.y>=title.box.y+title.box.h);
+    assert.ok(m.flow.find(b=>b.blockId==='body').box.y>=voice.box.y+voice.box.h);
+  }
+  assert.equal(JSON.stringify(c),before);
+});
+
 test('modern opening preserves all rotated source envelopes without rectangular clipping', () => {
   const c=capsule(); c.schemaRevision=3;
   const byId=Object.fromEntries([0.45,1.7,3.5].map((aspect,i)=>['frg_'+i,{id:'frg_'+i,aspect,weight:'medium'}]));

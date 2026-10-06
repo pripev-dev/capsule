@@ -21,3 +21,18 @@ and a shared print sheet. These prove the layout path, not visual acceptance.
 The composition agent's current visual-plan tool still emits opening banners
 and individual accents; secondary editorial selection and real family renders
 are the next integration work. No private candidate has been rewritten.
+
+An opening cluster can now declare `openingFlow: above-title` or
+`beside-title`. This is a reading-order choice, never a dimension. The former
+uses the field's broad collage band and puts the title and recording below
+it; the latter retains the existing paired opening where the title and
+controls fit. Omitted intent preserves archived behaviour. A single piece
+remains a compact accent in either mode.
+
+The owner's selected desktop and print references motivate the broad band:
+the earlier engine forced every eligible wide modern opening beside the
+title, preventing that composition regardless of editorial selection.
+Synthetic regression tests cover phone, desktop, A4 and Letter reading
+order, source immutability and rejection of geometry or body-cluster use.
+Agent integration and family render review remain required before this is
+claimed as an improvement to the actual cookbooks.
