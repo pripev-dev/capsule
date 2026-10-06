@@ -64,3 +64,15 @@ test("offline visuals use only approved included paths and escape family caption
   manifest.items[0].reviewDecision = "rejected";
   assert.throws(() => offlineHtml({ capsule: doc, font, paths, fragmentManifest: manifest }), /approval/);
 });
+
+test("offline Kitchen image aliases require an exact capsule-owned source digest", () => {
+  const doc = capsule();
+  const manifest = JSON.parse(readFileSync(new URL("../fixtures/minimal-valid/visual-fragments.json", import.meta.url)));
+  const item = manifest.items[0], originalId = item.sourceImageId;
+  item.sourceImageId = "image-kitchen-alias";
+  assert.ok(offlineHtml({ capsule: doc, font, paths: [...paths, item.alphaPngPath], fragmentManifest: manifest }).includes("Direct cutout"));
+  item.sourceImageSha256 = "f".repeat(64);
+  assert.throws(() => offlineHtml({ capsule: doc, font, paths, fragmentManifest: manifest }), /source/);
+  item.sourceImageId = originalId;
+  assert.throws(() => offlineHtml({ capsule: doc, font, paths, fragmentManifest: manifest }), /source/);
+});

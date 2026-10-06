@@ -60,8 +60,13 @@ export function offlineHtml({ capsule, font, paths, fragmentManifest, artworkMan
       const generated = item.assetType === "generated-source-derived-sticker";
       if (generated && !capsule.visualPack?.generatedMaterialApproved) throw new Error("Generated offline visual is not approved");
       const artifacts = new Map((capsule.artifacts ?? []).map(a => [a.artifactId, a.ref.sha256]));
+      // Kitchen's image IDs differ from preservation artifact IDs. An alias
+      // still needs the exact digest of a source declared by this capsule.
+      const directSourceMatches = artifacts.has(item.sourceImageId)
+        ? artifacts.get(item.sourceImageId) === item.sourceImageSha256
+        : [...artifacts.values()].includes(item.sourceImageSha256);
       if (generated ? item.sourceImageIds.some(id => !artifacts.has(id))
-        : artifacts.get(item.sourceImageId) !== item.sourceImageSha256) throw new Error("Offline visual source does not belong to the capsule");
+        : !directSourceMatches) throw new Error("Offline visual source does not belong to the capsule");
       const path = generated ? item.outputPath : item.paperRenderPath ?? item.alphaPngPath;
       const src = local({ archivePath: path });
       const prefix = generated ? "visuals/generated-derivatives/" : "visuals/approved-cutouts/";
