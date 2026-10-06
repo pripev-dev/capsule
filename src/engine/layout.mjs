@@ -279,7 +279,7 @@ function composeSurface(input) {
     placements = placements.concat(C.bodyClusters({
       clusters:intent.clusters || [],byId:byId,blockY:passA.blockY,blockBottom:blockBottom,
       seed:seed,surface:surface,col:{x:colX,w:colW},lead:sizes.lead,
-      bounds:{x:pad,y:flowTop,w:contentW},gutter:Math.max(6,body*0.55),mirror:mirror
+      bounds:{x:pad,y:flowTop,w:contentW},gutter:Math.max(6,body*0.55),mirror:mirror,materialLayers:true
     }));
   }
   if (page) {
@@ -484,6 +484,7 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
     bbox.x += (box.w - bbox.w) / 2;
   }
   var packed = C.packBanner({ fragments: frags, box: bbox, density: cluster.density, seed: seed,
+                              materialLayers:capsule.schemaRevision>=3,
                               groundFragmentIds:cluster.groundFragmentIds,focalFragmentId:cluster.focalFragmentId,
                               // A sheet that declared its physical size has a real
                               // edge; a screen does not. That is a fact about the

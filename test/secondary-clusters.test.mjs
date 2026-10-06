@@ -31,6 +31,28 @@ test('declared paper grounds paint before the focal object on every surface', ()
   }
 });
 
+test('material packing places the complete focal envelope over a visible supporting ground', () => {
+  const options={fragments:Object.values(byId),box:{x:30,y:30,w:400,h:200},density:0.7,
+    seed:'roles',groundFragmentIds:['b'],focalFragmentId:'a',materialLayers:true};
+  const before=JSON.stringify(options);
+  for(const seed of ['roles','paper','family','print']) {
+    const result=packBanner({...options,seed});
+    const ground=result.items.find(p=>p.fragmentId==='b'),focal=result.items.find(p=>p.fragmentId==='a');
+    const overlap=Math.max(0,Math.min(ground.x+ground.w,focal.x+focal.w)-Math.max(ground.x,focal.x))*
+      Math.max(0,Math.min(ground.y+ground.h,focal.y+focal.h)-Math.max(ground.y,focal.y));
+    assert.ok(overlap/(focal.w*focal.h)>=0.9,'a declared backing must support the focal envelope');
+    assert.ok(focal.w*focal.h<ground.w*ground.h*0.65,'supporting material stays visible');
+    assert.equal(result.items.length,2);
+    assert.equal(focal.z,1);
+    for(const item of result.items) assert.ok(Math.abs(item.w/item.h-byId[item.fragmentId].aspect)<1e-10);
+    assert.deepEqual(result,packBanner({...options,seed}));
+  }
+  assert.equal(JSON.stringify(options),before);
+  const sparse=packBanner({...options,density:0.1}),dense=packBanner({...options,density:0.9});
+  const area=result=>result.items.find(p=>p.fragmentId==='a').w*result.items.find(p=>p.fragmentId==='a').h;
+  assert.ok(area(dense)>area(sparse),'density still controls occupied material size');
+});
+
 test('editorial layer roles cannot introduce nonmembers or make the focal object a ground', () => {
   const c={...cluster('side-spacer'),groundFragmentIds:['b'],focalFragmentId:'a'};
   const page={visualPack:{approvedFragmentIds:['a','b','other']},compositions:[{intent:{clusters:[c]}}]};
@@ -39,6 +61,17 @@ test('editorial layer roles cannot introduce nonmembers or make the focal object
     const bad=structuredClone(page);change(bad.compositions[0].intent.clusters[0]);
     assert.equal(checkApprovedFragmentsOnly(bad).length,1);
   }
+});
+
+test('a modern narrow material group gives its subject room without duplicating sources', () => {
+  const c={...cluster('side-spacer'),groundFragmentIds:['b'],focalFragmentId:'a'};
+  const items=bodyClusters({...opts,materialLayers:true,clusters:[c],
+    surface:{kind:'screen',w:390,h:844},col:{x:50,w:280},bounds:{x:20,w:350}});
+  assert.equal(items.length,2);
+  const focal=items.find(p=>p.fragmentId==='a'),ground=items.find(p=>p.fragmentId==='b');
+  assert.ok(focal.w>opts.lead*2,'the subject should not shrink to a thumbnail within its backing');
+  assert.ok(focal.z>ground.z);
+  assert.ok(items.every(p=>p.poly.length===4));
 });
 
 test('secondary clusters retain distinct members and their actual contour blockers', () => {

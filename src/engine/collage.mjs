@@ -115,11 +115,36 @@ function packBanner(opts) {
     items.push(item);
     stamp(grid, GX, GY, box, item, fillOf(f));
   }
+  var grounds = new Set(opts.groundFragmentIds || []);
+  if (opts.materialLayers && grounds.size && opts.focalFragmentId) {
+    var supports = items.filter(item => grounds.has(item.fragmentId));
+    var focal = items.find(item => item.fragmentId === opts.focalFragmentId);
+    if (supports.length && focal) {
+      var materialRandom = rng.stream(opts.seed, 'material-layers');
+      // Roles now carry a physical relationship: intact paper behind a smaller
+      // intact subject. This consumes only declared members, never inferred
+      // labels, crops, duplicated sources or agent-authored dimensions.
+      function fit(item, bounds, share) {
+        var aspect = item.w / item.h;
+        var rot = rng.range(materialRandom,-3,3), angle = Math.abs(rot)*Math.PI/180;
+        var height = Math.min(bounds.w*share/(aspect*Math.cos(angle)+Math.sin(angle)),
+          bounds.h*share/(Math.cos(angle)+aspect*Math.sin(angle)));
+        item.w=height*aspect; item.h=height; item.rot=rot;
+        item.x=bounds.x+(bounds.w-item.w)/2+rng.range(materialRandom,-0.025,0.025)*bounds.w;
+        item.y=bounds.y+(bounds.h-item.h)/2+rng.range(materialRandom,-0.025,0.025)*bounds.h;
+      }
+      supports.forEach(item=>fit(item,box,0.72+0.16*density));
+      var backing=supports.reduce((a,b)=>a.w*a.h>=b.w*b.h?a:b);
+      fit(focal,backing,0.61+0.10*density);
+      // Geometry changed, so coverage must describe the new placements.
+      grid.fill(0);
+      items.forEach(item=>stamp(grid,GX,GY,box,item,fillOf(frags.find(f=>f.id===item.fragmentId))));
+    }
+  }
   var cov = 0; for (var i = 0; i < grid.length; i++) cov += Math.min(1, grid[i]);
   var kinds = Object.keys(timesUsed).filter(function (k) { return timesUsed[k] > 0; });
   // Weight sizes a piece; editorial role decides which piece must remain
   // visible. Paper grounds cannot paint over the selected focal object.
-  var grounds = new Set(opts.groundFragmentIds || []);
   var rank = item => grounds.has(item.fragmentId) ? 0 :
     item.fragmentId === opts.focalFragmentId ? 2 : 1;
   items.sort((a,b)=>rank(a)-rank(b));
@@ -251,8 +276,12 @@ function bodyClusters(opts) {
     var random = rng.stream(opts.seed, 'cluster/' + cluster.clusterId);
     var right = random() > 0.5;
     if (opts.mirror) right = !right;
-    var width = cluster.role === 'horizontal-divider' ? opts.col.w : opts.col.w * 0.32;
+    var layered = opts.materialLayers && cluster.groundFragmentIds?.length && cluster.focalFragmentId;
+    var width = cluster.role === 'horizontal-divider' ? opts.col.w : opts.col.w * (layered ? 0.48 : 0.32);
     var height = opts.lead * (cluster.role === 'vertical-rail' ? 7 : cluster.role === 'side-spacer' ? 4 : 2.5);
+    if (layered) {
+      height = Math.max(height,opts.lead*5);
+    }
     // Simplification reduces the occupied zone, never silently changes which
     // approved pieces the family selected.
     if (policy === 'simplify') { width *= 0.8; height *= 0.75; }
@@ -264,7 +293,8 @@ function bodyClusters(opts) {
     var box = {x,y:Math.max(opts.bounds.y || 0,y),w:width,h:height};
     var packed = packBanner({fragments,box,density:cluster.density,
       seed:cluster.clusterScatterSeed || opts.seed + '/' + cluster.clusterId,allowBleed:false,
-      groundFragmentIds:cluster.groundFragmentIds,focalFragmentId:cluster.focalFragmentId});
+      groundFragmentIds:cluster.groundFragmentIds,focalFragmentId:cluster.focalFragmentId,
+      materialLayers:opts.materialLayers});
     for (var item of packed.items) {
       var f = opts.byId[item.fragmentId];
       out.push({...item, clusterId:cluster.clusterId,

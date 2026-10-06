@@ -36,3 +36,19 @@ Synthetic regression tests cover phone, desktop, A4 and Letter reading
 order, source immutability and rejection of geometry or body-cluster use.
 Agent integration and family render review remain required before this is
 claimed as an improvement to the actual cookbooks.
+
+Modern pages now use declared ground and focal roles for material packing,
+rather than only for paint order. Supporting sources remain intact behind a
+smaller focal source, with visible backing, original aspect ratios and seeded
+variation. Coverage is recomputed from the resulting geometry. No labels are
+interpreted and no source is cropped, stretched, repeated or invented.
+Body groups with both roles receive room for the combined material instead of
+squeezing it into a thin divider or a small independent-accent zone.
+
+Direct packer calls without material mode and older editions retain their
+previous geometry. A failing regression reproduced the detached placement;
+synthetic checks cover backing overlap, visible paper, unique membership,
+aspect ratios, deterministic replay and a readable narrow subject. A private
+phone comparison shows the existing bowl over its approved paper as a single
+group with text flowing beside it. Broader family print and responsive review
+remain required; this is not owner acceptance of a cookbook.
