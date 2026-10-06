@@ -1070,7 +1070,15 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
                                     maxLine: ownW,
                                     keepTogetherRanges: capsule.schemaRevision >= 3
                                       ? (block.marks || []).filter(function (mk) { return mk.type === 'circle'; }) : [],
-                                    shapeFor: shapeFor(x0, ownW, 0),
+                                    shapeFor: function (bandY, bandH) {
+                                      if (!(sz.modernEditorial && ctx.marker)) return shapeFor(x0,ownW,0)(bandY,bandH);
+                                      // A marker travels with the first reading line. Reserve its
+                                      // lane inside each contour-free interval before setting text.
+                                      var lane=ctx.markerWidth || gut;
+                                      return shapeFor(x0-lane,ownW+lane,0)(bandY,bandH)
+                                        .map(function (span) { return [span[0]+lane,span[1]]; })
+                                        .filter(function (span) { return span[1]>span[0]; });
+                                    },
                                     // What counts as a usable line depends on how
                                     // big the type is. Six characters of body text
                                     // is a line; six characters of display type is
@@ -1116,10 +1124,12 @@ function flowBlocks(capsule, fonts, sz, colX, colW, top, placements, page, measu
     }
     // A marker sits in its LIST'S gutter, at its item's first baseline. The
     // vertical follows the line - a wrapped first line still starts where the
-    // numeral should sit - but the horizontal is the container's, so the column
-    // holds for the whole list however the text round it moves.
+    // numeral should sit. Modern pages reserve a marker lane inside the same
+    // free interval as the line; archived pages keep their fixed list gutter.
     var firstLine = laid.lines[0];
-    var markerX = (ctx.gutterX != null ? ctx.gutterX : x0 - gut);
+    var markerX = sz.modernEditorial && ctx.marker && firstLine
+      ? firstLine.x-(ctx.markerWidth || gut)
+      : (ctx.gutterX != null ? ctx.gutterX : x0 - gut);
     var markerY = firstLine ? firstLine.y : y;
     items.push({ blockId: block.blockId, type: kind, kind: 'text', role: role, depth: depth,
                  size: size, spec: spec, lines: laid.lines, block: block, rtl: blockRtl,

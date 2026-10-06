@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { bandSpan } from "../src/engine/geometry.mjs";
 import { composeSurface } from "../src/engine/layout.mjs";
 import { makeMetricMeasurer } from "../src/engine/textlayout.mjs";
 import { validate, checkClosure } from "../src/validate/index.mjs";
@@ -48,4 +49,20 @@ test("treatments reject invented geometry and dangling block references",()=>{
   delete valid.compositions[0].intent.blockTreatments[0].x;
   valid.compositions[0].intent.blockTreatments[0].blockId="blk_missing";
   assert.ok(checkClosure(valid).some(f=>f.id==="blk_missing"));
+});
+
+test("numbered markers remain clear of body collage contours",()=>{
+  const c=fixture();c.schemaRevision=3;
+  const fragmentsById={paper:{id:'paper',aspect:1,contour:[[0,0],[1,0],[1,1],[0,1]]}};
+  c.compositions[0].intent.clusters=[{clusterId:'body',role:'side-spacer',anchor:{blockId:'blk_first',relation:'beside'},memberFragmentIds:['paper'],density:0.8}];
+  for(const seed of ['left','right','family','paper','print','recipe']) {
+    c.compositions[0].intent.scatterSeed=seed;
+    for(const surface of [{kind:'screen',w:390,h:844},{kind:'screen',w:834,h:1112},{kind:'print',w:794,h:1123,widthInches:8.27}]) {
+      const m=composeSurface({capsule:c,surface,fragmentsById,measure:makeMetricMeasurer()});
+      for(const item of m.flow.filter(f=>f.marker)) for(const p of m.placements) {
+        const span=bandSpan(p.poly,item.marker.y,item.marker.h);
+        if(span)assert.ok(item.marker.x+item.marker.w<=span[0]+0.001 || item.marker.x>=span[1]-0.001, 'numbered marker must not paint over artwork '+JSON.stringify({marker:item.marker,span,seed,surface}));
+      }
+    }
+  }
 });

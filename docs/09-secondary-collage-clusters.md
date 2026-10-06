@@ -52,3 +52,10 @@ aspect ratios, deterministic replay and a readable narrow subject. A private
 phone comparison shows the existing bowl over its approved paper as a single
 group with text flowing beside it. Broader family print and responsive review
 remain required; this is not owner acceptance of a cookbook.
+
+A subsequent real A4 candidate exposed numbered steps painting over a body
+cluster. Modern lists now reserve a marker lane inside each contour-free reading
+interval, and the marker follows the first line instead of staying behind in
+the container gutter. A failing regression covers multiple scatter seeds on
+phone, tablet and A4. The change preserves source text and the agent's material
+choices; actual family render review remains required before promotion.
