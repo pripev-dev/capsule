@@ -514,6 +514,19 @@ function buildBanner(capsule, intent, byId, box, surface, sizes, seed, mirror, f
     packed.coverage *= scale*scale;
   }
   if (mirror) packed.items.forEach(function (it) { it.x = bbox.x + bbox.w - (it.x - bbox.x) - it.w; it.rot = -it.rot; });
+  if (capsule.schemaRevision >= 3 && !readingMeasure && packed.items.length) {
+    // The packing band is a maximum, not blank paper to reserve below a
+    // complete source. Keep the artwork unchanged and begin reading after
+    // its rotated envelope; paired openings still share their original band.
+    var paintedBottom = packed.items.reduce(function (bottom, it) {
+      var angle = Math.abs(it.rot) * Math.PI / 180;
+      return Math.max(bottom, it.y + it.h / 2 +
+        (it.h * Math.cos(angle) + it.w * Math.sin(angle)) / 2);
+    }, bbox.y);
+    var oldHeight = bbox.h;
+    bbox.h = Math.max(1, paintedBottom - bbox.y);
+    packed.coverage *= oldHeight / bbox.h;
+  }
   return { box: bbox, items: packed.items, coverage: packed.coverage, typographic: false,
            kindsUsed: packed.kindsUsed, kindsAvailable: packed.kindsAvailable,
            edge: P.tornRect(bbox, seed + '/banner'), title: titleBlock ? titleBlock.text : '',

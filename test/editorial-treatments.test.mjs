@@ -66,3 +66,19 @@ test("numbered markers remain clear of body collage contours",()=>{
     }
   }
 });
+
+test('modern stacked openings reserve the painted heap rather than empty banner space',()=>{
+  const c=fixture();c.schemaRevision=3;
+  c.compositions[0].intent.clusters=[{clusterId:'opening',role:'opening-banner',anchor:{blockId:'blk_title',relation:'before'},memberFragmentIds:['wide'],density:0.72}];
+  const fragmentsById={wide:{id:'wide',aspect:6,contour:[[0,0],[1,0],[1,1],[0,1]]}};
+  for(const surface of [{kind:'screen',w:390,h:844},{kind:'screen',w:834,h:1112},{kind:'print',w:794,h:1123,widthInches:8.27}]) {
+    const m=composeSurface({capsule:c,surface,fragmentsById,measure:makeMetricMeasurer()});
+    const bottom=Math.max(...m.banner.items.map(it=>{
+      const a=Math.abs(it.rot)*Math.PI/180;
+      return it.y+it.h/2+(it.h*Math.cos(a)+it.w*Math.sin(a))/2;
+    }));
+    assert.ok(Math.abs(m.banner.box.y+m.banner.box.h-bottom)<0.001,'stacked opening must end at its rotated painted envelope');
+    const title=m.flow.find(f=>f.blockId==='blk_title');
+    assert.ok(title.box.y>=bottom,'reading must remain below artwork');
+  }
+});
