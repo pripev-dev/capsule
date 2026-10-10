@@ -186,35 +186,30 @@ function pieces(n) {
   }));
 }
 
-test("the banner fills with thirty-two pieces and with exactly one", () => {
+test("the banner places every selected fragment once, including exactly one", () => {
   const box = { x: 0, y: 0, w: 900, h: 320 };
   const many = collage.packBanner({ fragments: pieces(32), box, density: 0.6, seed: "banner" });
-  assert.ok(many.items.length > 4, `only ${many.items.length} items`);
+  assert.equal(many.items.length, 32);
+  assert.equal(new Set(many.items.map((it) => it.fragmentId)).size, 32);
   assert.ok(many.coverage > 0.5, `coverage ${many.coverage}`);
 
-  // One fragment must still fill the rectangle - it repeats rather than leaving
-  // a heap that is one photograph and a lot of nothing.
+  // One approved family fragment is one physical piece on the page. The paper
+  // around it is preferable to manufacturing copies of the same photograph.
   const one = collage.packBanner({ fragments: pieces(1), box, density: 0.6, seed: "banner" });
-  assert.ok(one.items.length > 1, `one fragment produced ${one.items.length} items`);
-  assert.equal(one.items.every((it) => it.fragmentId === "frg_0"), true);
-  assert.ok(one.coverage > 0.5, `coverage ${one.coverage}`);
+  assert.equal(one.items.length, 1);
+  assert.equal(one.items[0].fragmentId, "frg_0");
 
   // No fragments is empty rather than an error.
   assert.deepEqual(collage.packBanner({ fragments: [], box, density: 0.6, seed: "b" }).items, []);
 });
 
-test("the heap draws by use, so one piece cannot take the biggest hole twice", () => {
+test("the heap uses each editorial choice exactly once", () => {
   const box = { x: 0, y: 0, w: 900, h: 320 };
   const packed = collage.packBanner({ fragments: pieces(8), box, density: 0.7, seed: "banner" });
   const used = new Map();
   for (const item of packed.items) used.set(item.fragmentId, (used.get(item.fragmentId) ?? 0) + 1);
-  // Every piece is used, and none dominates: if the heap simply aimed each piece
-  // at the emptiest cell without tracking use, the first fragment would win the
-  // largest hole every round and the banner would be one photograph repeated.
   assert.equal(used.size, 8, `only ${used.size} of 8 fragments were placed`);
-  const counts = [...used.values()];
-  assert.ok(Math.max(...counts) - Math.min(...counts) <= 2,
-    `use spread too wide: ${counts.join(",")}`);
+  assert.deepEqual([...used.values()], Array(8).fill(1));
 });
 
 test("the banner is seeded, so the same heap comes back", () => {
@@ -276,4 +271,19 @@ test("a mark is one gesture or one per line, and every kind is drawable", () => 
   const first = marks.BUILDERS.highlight(threeLines[0], seed);
   const second = marks.BUILDERS.highlight(threeLines[1], seed);
   assert.notDeepEqual(first, second);
+});
+
+test("a text ending in a space that does not fit gets no extra, empty line", () => {
+  // The agent's blocks often end in a space. When the last word filled its
+  // line exactly, the space was left over and the layout gave it a line of its
+  // own: a blank line of body height under the step, on screen and on paper.
+  const measure = textlayout.makeMetricMeasurer();
+  const spec = { stack: "serif", key: "serif" };
+  const prepared = textlayout.prepare("Let it bubble gently. ", spec, measure);
+  const words = textlayout.prepare("Let it bubble gently.", spec, measure);
+  const width = words.atoms.reduce((w, a) => w + a.w * 20, 0) + 0.5;
+  const laid = textlayout.layout(prepared, { size: 20, leading: 1.5, y: 0, minLine: 1,
+    shapeFor: () => [[0, width]] });
+  assert.equal(laid.lines.length, 1);
+  assert.equal(laid.bottom, 30, "one line of 20px type at 1.5 leading ends at 30");
 });

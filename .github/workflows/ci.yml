@@ -1,12 +1,19 @@
 name: CI
 
+# `phase-e` as well as `main`, because `phase-e` is where work is actually
+# reviewed now: every feature merges into it through a pull request, and only
+# the finished phase goes on to `main`. Watching `main` alone meant this ran on
+# none of those reviews - which is how the application's 27-commit erasure
+# pull request into `phase-e` came to read "clean" with no check having run.
 on:
   pull_request:
     branches:
       - main
+      - phase-e
   push:
     branches:
       - main
+      - phase-e
 
 permissions:
   contents: read

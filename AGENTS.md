@@ -8,14 +8,15 @@
 
 **Status: Phase A contract implemented, and the deterministic composition engine
 is here.** The schema set, validators, reference fixture, visual-fragment
-manifest V2, the ported engine and the privacy guard have **124 tests**. On a
-clean public clone 114 are runnable and 10 skip - those 10 replay the private Design
-export and say so rather than failing. Several more skip anywhere git is
+manifest V2, the ported engine and the privacy guard have **153 tests** (30
+September 2026). On a clean public clone the ones that replay the private
+Design export skip and say so rather than failing. Several more skip anywhere git is
 unavailable, because they ask git how it classifies or enumerates the tracked
-files. The offline viewer remains later work; so does
-the renderer, which is deliberately still in the Stage 1 export rather than in
-this repository. Nothing here may be described as working
-until its test is green.
+files. M13 now adds verified ZIP packaging, non-destructive restore, standalone
+verification and a minimal offline reading fallback in `src/archive/`; see
+`docs/06-portable-archive.md` for tested scope and limits. The composed renderer
+lives in the application (`app/src/document/render/`), not here. Nothing here
+may be described as working until its test is green.
 
 The engine arrived on 2026-09-05 from the Claude Design prototype, converted
 CommonJS/browser-global IIFE to ESM with every body copied and checked byte for
